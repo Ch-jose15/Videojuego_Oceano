@@ -48,6 +48,14 @@ public class UIInventario : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
+    //Devuelve true si el panel del inventario se está mostrando
+    public bool EstaVisible()
+    {
+        return panelInventario != null && panelInventario.activeSelf;
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
     //Escribe en cada slot el nombre del objeto guardado, o lo deja vacío
     private void ActualizarSlots()
     {

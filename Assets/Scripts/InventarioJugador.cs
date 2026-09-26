@@ -34,8 +34,18 @@ public class InventarioJugador : MonoBehaviour
 
     void Update()
     {
-        if (!Input.GetKeyDown(teclaInventario)) return;
+        //Con un menú abierto las teclas G y 1-5 no hacen nada (el menú de la tienda también usa 1 y 2)
+        if (EstadoJuego.ControlesBloqueados) return;
 
+        if (Input.GetKeyDown(teclaInventario)) PulsarTeclaInventario();
+
+        ComprobarTeclasSlots();
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    private void PulsarTeclaInventario()
+    {
         if (agarrar != null && agarrar.TieneObjetoAgarrado())
         {
             //Llevamos algo en la mano: lo guardamos (si está lleno, no hace nada y seguimos con el objeto en la mano)
@@ -46,6 +56,36 @@ public class InventarioJugador : MonoBehaviour
             //Manos libres: abrimos/cerramos la UI del inventario
             if (uiInventario != null) uiInventario.AlternarVisible();
         }
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Teclas 1 a 5: sacan el objeto de ese slot a la mano.
+    //Solo funcionan con el inventario abierto y las manos vacías (para no cambiar sin querer lo que llevamos)
+    private void ComprobarTeclasSlots()
+    {
+        if (agarrar == null || uiInventario == null) return;
+        if (!uiInventario.EstaVisible() || agarrar.TieneObjetoAgarrado()) return;
+
+        for (int i = 0; i < NumeroSlots; i++)
+        {
+            //KeyCode.Alpha1 + 0 = tecla 1, KeyCode.Alpha1 + 1 = tecla 2, etc.
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i)) SacarAMano(i);
+        }
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Saca el objeto del slot, lo vuelve a activar y se lo pone en la mano al jugador. Si el slot está vacío no hace nada
+    public void SacarAMano(int slot)
+    {
+        if (agarrar == null || agarrar.TieneObjetoAgarrado()) return;
+
+        GameObject objeto = QuitarObjeto(slot);
+        if (objeto == null) return;
+
+        objeto.SetActive(true);
+        agarrar.Agarrar(objeto);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/

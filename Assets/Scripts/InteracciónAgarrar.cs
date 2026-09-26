@@ -26,6 +26,9 @@ public class InteracciónAgarrar : MonoBehaviour
 
     void Update()
     {
+        //Con un menú abierto no se agarra ni se suelta nada
+        if (EstadoJuego.ControlesBloqueados) return;
+
         if (objetoAgarrado == null) ActualizarObjetivoResaltado();
         else QuitarResaltadoActual();
 
@@ -81,7 +84,8 @@ public class InteracciónAgarrar : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    private void Agarrar(GameObject objeto)
+    //Pone el objeto en la mano. Es público para que otros scripts (por ejemplo el inventario) puedan dárselo al jugador
+    public void Agarrar(GameObject objeto)
     {
         QuitarResaltadoActual();
  

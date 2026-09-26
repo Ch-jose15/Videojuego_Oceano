@@ -1,14 +1,23 @@
 using UnityEngine;
 
-//Tienda sólida. Si el jugador la mira dentro de su alcance llevando un objeto, se resalta y con F vende el objeto
+//Tienda sólida. Si el jugador la mira dentro de su alcance se resalta, y con F se abre un menú:
+//  1 = Vender el objeto que llevamos en la mano
+//  2 = Comprar (de momento solo abre un panel vacío)
+//  F o Escape = cerrar
+//Mientras el menú está abierto el juego se pausa (ver EstadoJuego)
 [RequireComponent(typeof(Collider))]
 public class Tienda : MonoBehaviour
 {
     [Header("Referencias")]
     public InteracciónAgarrar jugador;
+    public GameObject panelMenu;      //Panel con las opciones Vender / Comprar
+    public GameObject panelComprar;   //Panel de compra (placeholder)
 
-    [Header("Ajustes")]
-    public KeyCode teclaVender = KeyCode.F;
+    [Header("Teclas")]
+    public KeyCode teclaAbrir = KeyCode.F;
+    public KeyCode teclaVender = KeyCode.Alpha1;
+    public KeyCode teclaComprar = KeyCode.Alpha2;
+    public KeyCode teclaCerrar = KeyCode.Escape;
 
     [Header("Resaltado")]
     public Color colorResaltado = new Color(0.3f, 1f, 0.4f);
@@ -17,6 +26,7 @@ public class Tienda : MonoBehaviour
     private Renderer rendererTienda;
     private Color colorOriginal;
     private bool resaltada = false;
+    private bool menuAbierto = false;
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
@@ -30,6 +40,9 @@ public class Tienda : MonoBehaviour
 
         //Si no se ha asignado el jugador en el Inspector, lo buscamos en la escena
         if (jugador == null) jugador = FindFirstObjectByType<InteracciónAgarrar>();
+
+        //Los paneles empiezan ocultos
+        OcultarPaneles();
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -38,13 +51,76 @@ public class Tienda : MonoBehaviour
     {
         if (jugador == null) return;
 
-        //Solo se puede vender si llevamos algo en la mano y estamos mirando la tienda
-        bool puedeVender = jugador.TieneObjetoAgarrado() && JugadorMirandoTienda();
+        if (menuAbierto)
+        {
+            ManejarMenu();
+            return;
+        }
 
-        if (puedeVender) Resaltar();
+        //Si otro menú está abierto, la tienda no hace nada
+        if (EstadoJuego.ControlesBloqueados) return;
+
+        bool mirando = JugadorMirandoTienda();
+
+        if (mirando) Resaltar();
         else QuitarResaltado();
 
-        if (puedeVender && Input.GetKeyDown(teclaVender)) Vender();
+        if (mirando && Input.GetKeyDown(teclaAbrir)) AbrirMenu();
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Teclas mientras el menú está abierto
+    private void ManejarMenu()
+    {
+        //F o Escape cierran siempre (tanto el menú como el panel de comprar)
+        if (Input.GetKeyDown(teclaAbrir) || Input.GetKeyDown(teclaCerrar))
+        {
+            CerrarMenu();
+            return;
+        }
+
+        //Las opciones solo se pueden elegir en el menú principal, no dentro del panel de comprar
+        if (!panelMenu.activeSelf) return;
+
+        if (Input.GetKeyDown(teclaVender))
+        {
+            Vender();
+            CerrarMenu();
+        }
+        else if (Input.GetKeyDown(teclaComprar))
+        {
+            //Cambiamos al panel de comprar. Se cierra con F o Escape
+            panelMenu.SetActive(false);
+            panelComprar.SetActive(true);
+        }
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    private void AbrirMenu()
+    {
+        menuAbierto = true;
+        panelMenu.SetActive(true);
+        panelComprar.SetActive(false);
+        EstadoJuego.AbrirMenu();
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    private void CerrarMenu()
+    {
+        menuAbierto = false;
+        OcultarPaneles();
+        EstadoJuego.CerrarMenu();
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    private void OcultarPaneles()
+    {
+        if (panelMenu != null) panelMenu.SetActive(false);
+        if (panelComprar != null) panelComprar.SetActive(false);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -84,6 +160,7 @@ public class Tienda : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
+    //Vende el objeto que llevamos en la mano. Si no llevamos nada, no hace nada
     private void Vender()
     {
         //Le quitamos el objeto de la mano al jugador (se queda con las manos libres)
@@ -101,8 +178,5 @@ public class Tienda : MonoBehaviour
 
         //El objeto vendido desaparece
         Destroy(objeto);
-
-        //Ya no llevamos nada, así que la tienda deja de estar resaltada
-        QuitarResaltado();
     }
 }

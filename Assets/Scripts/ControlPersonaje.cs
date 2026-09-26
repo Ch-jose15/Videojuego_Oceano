@@ -8,7 +8,7 @@ public class UnderwaterSwimController : MonoBehaviour
     public Transform camara;
 
     [Header("Movimiento")]
-    public float velocidadNado = 4f;
+    public float velocidadNado = 10f; //Aceleración. Velocidad máxima real ≈ velocidadNado / dragAgua (10 / 2.5 = 4 m/s)
     public float dragAgua = 2.5f;
     public float dragAngular = 3f;
 
@@ -23,11 +23,15 @@ public class UnderwaterSwimController : MonoBehaviour
 
     [Header("Dash")]
     public KeyCode teclaDash = KeyCode.LeftShift;
-    public float fuerzaDash = 12f;
+    public float fuerzaDash = 20f; //Impulso instantáneo en m/s (unas 5 veces la velocidad normal)
     public float duracionDash = 0.25f;
     public float cooldownDash = 1.2f;
     public float dashFovExtra = 12f;
     public float dashFovVelocidad = 8f;
+
+    [Header("Stamina")]
+    public StaminaJugador stamina;
+    public float costeStaminaDash = 30f; //staminaMaxima / 3 (con 90 de máximo = 3 dashes seguidos)
 
     private Rigidbody rb;
     private float rotacionVertical = 0f;
@@ -49,14 +53,33 @@ public class UnderwaterSwimController : MonoBehaviour
         Cursor.visible = false;
 
         if (camara != null) fovBase = camara.GetComponent<Camera>().fieldOfView;
+
+        //Si no se ha asignado en el Inspector, la buscamos en el propio jugador
+        if (stamina == null) stamina = GetComponent<StaminaJugador>();
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
     void Update()
     {
+        //Con un menú abierto no se mira ni se dashea
+        if (EstadoJuego.ControlesBloqueados) return;
+
         ManejarMirarCamara();
-        if (Input.GetKeyDown(teclaDash) && puedeDashear && !dasheando) StartCoroutine(HacerDash());
+
+        //La stamina se regenera siempre que no estemos en mitad de un dash
+        if (stamina != null && !dasheando) stamina.Regenerar(Time.deltaTime);
+
+        if (Input.GetKeyDown(teclaDash) && puedeDashear && !dasheando && TieneStaminaParaDash()) StartCoroutine(HacerDash());
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Si no hay script de stamina, el dash funciona como antes (sin gastar nada)
+    private bool TieneStaminaParaDash()
+    {
+        if (stamina == null) return true;
+        return stamina.TieneSuficiente(costeStaminaDash);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -113,6 +136,9 @@ public class UnderwaterSwimController : MonoBehaviour
     {
         puedeDashear = false;
         dasheando = true;
+
+        //Gastamos la stamina del dash (ya se comprobó en Update que había suficiente)
+        if (stamina != null) stamina.Consumir(costeStaminaDash);
 
         Vector3 direccionDash = camara.forward;
         rb.AddForce(direccionDash * fuerzaDash, ForceMode.VelocityChange);
