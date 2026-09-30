@@ -65,7 +65,8 @@ public class UnderwaterSwimController : MonoBehaviour
         //Con un menú abierto no se mira ni se dashea
         if (EstadoJuego.ControlesBloqueados) return;
 
-        ManejarMirarCamara();
+        //Si hay una UI que se usa con el ratón (inventario, tienda...), la cámara no gira
+        if (!EstadoJuego.RatonLibre) ManejarMirarCamara();
 
         //La stamina se regenera siempre que no estemos en mitad de un dash
         if (stamina != null && !dasheando) stamina.Regenerar(Time.deltaTime);

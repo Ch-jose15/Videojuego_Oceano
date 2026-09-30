@@ -155,12 +155,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemigoSimple
   vidaJugador: {fileID: 0}
   velocidadDeambular: 1
-  velocidadPersecucion: 2.5
+  velocidadPersecucion: 2
   radioDeambular: 8
   tiempoCambioDestino: 5
   dragAgua: 2
-  radioDeteccion: 12
-  radioPerderJugador: 18
+  radioDeteccion: 5
+  radioPerderJugador: 8
   distanciaAtaque: 2
   "da\xF1oPorGolpe": 20
   cooldownGolpe: 2

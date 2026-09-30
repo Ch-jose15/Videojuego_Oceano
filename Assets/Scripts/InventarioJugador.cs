@@ -34,12 +34,10 @@ public class InventarioJugador : MonoBehaviour
 
     void Update()
     {
-        //Con un menú abierto las teclas G y 1-5 no hacen nada (el menú de la tienda también usa 1 y 2)
+        //Con un menú abierto la tecla G no hace nada
         if (EstadoJuego.ControlesBloqueados) return;
 
         if (Input.GetKeyDown(teclaInventario)) PulsarTeclaInventario();
-
-        ComprobarTeclasSlots();
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -60,23 +58,8 @@ public class InventarioJugador : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Teclas 1 a 5: sacan el objeto de ese slot a la mano.
-    //Solo funcionan con el inventario abierto y las manos vacías (para no cambiar sin querer lo que llevamos)
-    private void ComprobarTeclasSlots()
-    {
-        if (agarrar == null || uiInventario == null) return;
-        if (!uiInventario.EstaVisible() || agarrar.TieneObjetoAgarrado()) return;
-
-        for (int i = 0; i < NumeroSlots; i++)
-        {
-            //KeyCode.Alpha1 + 0 = tecla 1, KeyCode.Alpha1 + 1 = tecla 2, etc.
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i)) SacarAMano(i);
-        }
-    }
-
-    /*--------------------------------------------------------------------------------------------------------------------------*/
-
-    //Saca el objeto del slot, lo vuelve a activar y se lo pone en la mano al jugador. Si el slot está vacío no hace nada
+    //Saca el objeto del slot, lo vuelve a activar y se lo pone en la mano al jugador.
+    //La llama UIInventario al hacer clic en un slot. Si el slot está vacío o ya llevamos algo en la mano, no hace nada
     public void SacarAMano(int slot)
     {
         if (agarrar == null || agarrar.TieneObjetoAgarrado()) return;

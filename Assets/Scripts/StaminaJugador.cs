@@ -15,9 +15,12 @@ public class StaminaJugador : MonoBehaviour
     public float esperaAntesDeRegenerar = 3f;
 
     [Header("UI")]
-    public Image rellenoBarraStamina; //Image con Image Type = Filled
+    public Image rellenoBarraStamina;   //Image con Image Type = Filled
+    public RectTransform barraStamina;  //Contenedor de la barra (el fondo). Se hace más ancho al mejorar la stamina máxima
 
     private float staminaActual;
+    private float staminaMaximaInicial; //Para calcular cuánto tiene que crecer la barra
+    private float anchoInicialBarra;
     private float tiempoUltimoGasto = -999f;
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -27,6 +30,10 @@ public class StaminaJugador : MonoBehaviour
         //Empezamos con la stamina llena
         staminaActual = staminaMaxima;
         ActualizarBarra();
+
+        //Guardamos los valores iniciales para que la barra crezca en proporción al máximo
+        staminaMaximaInicial = staminaMaxima;
+        if (barraStamina != null) anchoInicialBarra = barraStamina.sizeDelta.x;
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -69,6 +76,25 @@ public class StaminaJugador : MonoBehaviour
     public float ObtenerStamina()
     {
         return staminaActual;
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Sube la stamina máxima y la rellena hasta el nuevo máximo (lo usa la Tienda al comprar la mejora)
+    public void AumentarStaminaMaxima(float cantidad)
+    {
+        if (cantidad <= 0f) return;
+
+        staminaMaxima += cantidad;
+        staminaActual = staminaMaxima;
+        ActualizarBarra();
+
+        //La barra se hace más ancha en proporción: si la stamina máxima pasa de 90 a 120, la barra crece un 33%
+        if (barraStamina != null)
+        {
+            float nuevoAncho = anchoInicialBarra * (staminaMaxima / staminaMaximaInicial);
+            barraStamina.sizeDelta = new Vector2(nuevoAncho, barraStamina.sizeDelta.y);
+        }
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/

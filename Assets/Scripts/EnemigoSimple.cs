@@ -1,6 +1,9 @@
 using UnityEngine;
 
 //Enemigo marino simple (prototipo).
+//Deambula alrededor de su punto de aparición. Si el jugador se acerca a menos de radioDeteccion, lo persigue,
+//y si el jugador se aleja más de radioPerderJugador, lo pierde de vista y vuelve a deambular.
+//(radioPerderJugador es mayor que radioDeteccion para que no cambie de estado todo el rato justo en el límite)
 //Si toca al jugador (distanciaAtaque) le quita vida, con un tiempo de espera entre golpes.
 [RequireComponent(typeof(Rigidbody))]
 public class EnemigoSimple : MonoBehaviour
@@ -16,8 +19,8 @@ public class EnemigoSimple : MonoBehaviour
     public float dragAgua = 2f;
 
     [Header("Detección")]
-    public float radioDeteccion = 12f;
-    public float radioPerderJugador = 18f;
+    public float radioDeteccion = 5f;       //Empieza a perseguir si el jugador está más cerca que esto
+    public float radioPerderJugador = 8f;   //Deja de perseguir si el jugador está más lejos que esto (mayor que radioDeteccion)
 
     [Header("Ataque")]
     public float distanciaAtaque = 1.8f;
@@ -62,8 +65,16 @@ public class EnemigoSimple : MonoBehaviour
         float distancia = Vector3.Distance(transform.position, jugador.position);
 
         //Empezar/dejar de perseguir según la distancia
-        if (distancia <= radioDeteccion) persiguiendo = true;
-        else if (distancia >= radioPerderJugador) persiguiendo = false;
+        if (!persiguiendo && distancia <= radioDeteccion)
+        {
+            persiguiendo = true;
+        }
+        else if (persiguiendo && distancia >= radioPerderJugador)
+        {
+            //Lo hemos perdido de vista: volvemos a deambular alrededor de nuestro punto de inicio
+            persiguiendo = false;
+            ElegirNuevoDestino();
+        }
 
         //Golpear si está lo bastante cerca y ya pasó el cooldown
         if (distancia <= distanciaAtaque && Time.time >= tiempoProximoGolpe)
@@ -124,11 +135,22 @@ public class EnemigoSimple : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
+    //Se ejecuta en el editor al cambiar un valor en el Inspector.
+    //Si la distancia de perder es menor o igual que la de detección, la corregimos (si no, el enemigo cambiaría de estado todo el rato)
+    void OnValidate()
+    {
+        if (radioPerderJugador <= radioDeteccion) radioPerderJugador = radioDeteccion + 1f;
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
     //Dibuja los radios en la vista Scene al seleccionar el enemigo (ayuda para ajustar valores)
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, radioDeteccion);
+        Gizmos.color = Color.gray;
+        Gizmos.DrawWireSphere(transform.position, radioPerderJugador);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, distanciaAtaque);
     }
