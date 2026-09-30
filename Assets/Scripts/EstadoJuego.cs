@@ -12,9 +12,6 @@ public static class EstadoJuego
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Los scripts del jugador lo consultan al principio de su Update.
-    //También bloquea el frame en el que se cierra el menú: si no, la misma tecla que elige una opción
-    //(por ejemplo el 1 de "Vender") la leería también el inventario en ese frame y sacaría el slot 1
     public static bool ControlesBloqueados
     {
         get { return MenuAbierto || Time.frameCount == frameCierreMenu; }

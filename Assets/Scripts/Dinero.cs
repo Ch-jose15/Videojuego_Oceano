@@ -3,7 +3,6 @@ using UnityEngine;
 
 public static class Dinero
 {
-    //Dinero total del jugador. Se puede leer desde fuera, pero solo se cambia con Sumar/Gastar
     public static int Total { get; private set; } = 0;
 
     //Evento que avisa cuando el dinero cambia (la UI se suscribe para actualizar el texto)

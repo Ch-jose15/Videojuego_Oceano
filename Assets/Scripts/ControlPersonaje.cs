@@ -75,7 +75,6 @@ public class UnderwaterSwimController : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Si no hay script de stamina, el dash funciona como antes (sin gastar nada)
     private bool TieneStaminaParaDash()
     {
         if (stamina == null) return true;

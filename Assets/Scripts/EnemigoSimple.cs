@@ -1,10 +1,6 @@
 using UnityEngine;
 
 //Enemigo marino simple (prototipo).
-//Decisión: DEAMBULA al azar alrededor de su punto de aparición y, si el jugador se acerca (radioDeteccion), lo PERSIGUE.
-//Si el jugador se aleja lo suficiente (radioPerderJugador), deja de perseguirlo y vuelve a deambular.
-//Lo elegí porque no hace falta colocar puntos de patrulla a mano (el enemigo funciona en cualquier sitio donde se genere)
-//y aun así parece "vivo": se mueve aunque no lo mires y reacciona cuando te acercas.
 //Si toca al jugador (distanciaAtaque) le quita vida, con un tiempo de espera entre golpes.
 [RequireComponent(typeof(Rigidbody))]
 public class EnemigoSimple : MonoBehaviour

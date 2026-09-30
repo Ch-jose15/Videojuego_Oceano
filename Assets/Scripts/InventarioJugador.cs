@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 //Inventario simple de 5 slots. Va en el jugador, junto a InteracciónAgarrar.
-//Los objetos guardados no se destruyen: se ocultan (SetActive(false)) para no perder sus datos (por ejemplo su ValorItem)
+//Los objetos guardados no se destruyen: se ocultan (SetActive(false)) para no perder sus datos
 public class InventarioJugador : MonoBehaviour
 {
     [Header("Referencias")]
