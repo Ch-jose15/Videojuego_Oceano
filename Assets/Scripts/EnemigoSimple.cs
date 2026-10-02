@@ -5,6 +5,7 @@ using UnityEngine;
 //y si el jugador se aleja más de radioPerderJugador, lo pierde de vista y vuelve a deambular.
 //(radioPerderJugador es mayor que radioDeteccion para que no cambie de estado todo el rato justo en el límite)
 //Si toca al jugador (distanciaAtaque) le quita vida, con un tiempo de espera entre golpes.
+//Tiene su propia vida: RecibirDaño() la resta (por ejemplo los proyectiles del jugador) y al llegar a 0 muere.
 [RequireComponent(typeof(Rigidbody))]
 public class EnemigoSimple : MonoBehaviour
 {
@@ -27,6 +28,12 @@ public class EnemigoSimple : MonoBehaviour
     public float dañoPorGolpe = 10f;
     public float cooldownGolpe = 1.5f;
 
+    [Header("Vida")]
+    public float vidaMaxima = 30f;
+    public float vidaActual;                    //Empieza llena (se pone en Awake)
+    public Color colorAlMorir = Color.white;    //Destello antes de desaparecer
+    public float duracionMuerte = 0.15f;
+
     private Rigidbody rb;
     private Transform jugador;
     private Vector3 puntoInicio;
@@ -34,6 +41,7 @@ public class EnemigoSimple : MonoBehaviour
     private float tiempoParaCambiarDestino;
     private bool persiguiendo = false;
     private float tiempoProximoGolpe = 0f;
+    private bool muerto = false;
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
@@ -45,6 +53,9 @@ public class EnemigoSimple : MonoBehaviour
 
         if (vidaJugador == null) vidaJugador = FindFirstObjectByType<VidaJugador>();
         if (vidaJugador != null) jugador = vidaJugador.transform;
+
+        //Empezamos con la vida llena
+        vidaActual = vidaMaxima;
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -59,8 +70,8 @@ public class EnemigoSimple : MonoBehaviour
 
     void Update()
     {
-        //Con un menú abierto el juego está en pausa: el enemigo no golpea
-        if (jugador == null || EstadoJuego.MenuAbierto) return;
+        //Con un menú abierto el juego está en pausa: el enemigo no golpea. Muerto tampoco
+        if (jugador == null || EstadoJuego.MenuAbierto || muerto) return;
 
         float distancia = Vector3.Distance(transform.position, jugador.position);
 
@@ -88,6 +99,8 @@ public class EnemigoSimple : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (muerto) return;
+
         if (persiguiendo) Perseguir();
         else Deambular();
     }
@@ -131,6 +144,34 @@ public class EnemigoSimple : MonoBehaviour
     {
         Vector3 direccion = (destino - transform.position).normalized;
         rb.AddForce(direccion * velocidad * dragAgua, ForceMode.Acceleration);
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Resta vida al enemigo (igual que VidaJugador.RecibirDaño). Si llega a 0, muere
+    public void RecibirDaño(float cantidad)
+    {
+        if (cantidad <= 0f || muerto) return;
+
+        vidaActual = Mathf.Clamp(vidaActual - cantidad, 0f, vidaMaxima);
+        if (vidaActual <= 0f) Morir();
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
+    //Efecto simple: el enemigo se queda quieto, se pone de colorAlMorir un instante y desaparece
+    private void Morir()
+    {
+        muerto = true;
+
+        rb.linearVelocity = Vector3.zero;
+        GetComponent<Collider>().enabled = false; //Que no le sigan golpeando ni empuje a nadie mientras desaparece
+
+        Renderer rend = GetComponent<Renderer>();
+        if (rend != null) rend.material.color = colorAlMorir;
+
+        //Destroy con tiempo: Unity lo destruye solo pasados esos segundos
+        Destroy(gameObject, duracionMuerte);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/

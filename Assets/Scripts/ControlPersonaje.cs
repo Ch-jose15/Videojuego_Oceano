@@ -8,13 +8,12 @@ public class UnderwaterSwimController : MonoBehaviour
     public Transform camara;
 
     [Header("Movimiento")]
-    public float velocidadNado = 10f; //Aceleración. Velocidad máxima real ≈ velocidadNado / dragAgua (10 / 2.5 = 4 m/s)
+    public float velocidadNado = 11f; //Aceleración. Velocidad máxima real ≈ velocidadNado / dragAgua (11 / 2.5 = 4.4 m/s)
     public float dragAgua = 2.5f;
     public float dragAngular = 3f;
 
-    [Header("Boyantez")]
-    public float fuerzaBoyantez = 9.8f;
-    public bool boyantezNeutral = true;
+    [Header("Flotabilidad")]
+    public float velocidadHundimiento = 1.5f; //Metros por segundo a los que se hunde el jugador si no nada hacia arriba (0 = se queda suspendido)
 
     [Header("Mirar (Mouse Look)")]
     public float sensibilidadRaton = 2.5f;
@@ -44,7 +43,7 @@ public class UnderwaterSwimController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        rb.useGravity = true; // la boyantez cancela esta gravedad para flotar neutro
+        rb.useGravity = true; // el empuje del agua (AplicarFlotabilidad) cancela casi toda esta gravedad, pero no toda: así se hunde despacio
         rb.constraints = RigidbodyConstraints.FreezeRotation; // evita que la cápsula ruede/vuelque y arrastre la cámara
         rb.linearDamping = dragAgua;
         rb.angularDamping = dragAngular;
@@ -87,7 +86,7 @@ public class UnderwaterSwimController : MonoBehaviour
     void FixedUpdate()
     {
         ManejarMovimiento();
-        AplicarBoyantez();
+        AplicarFlotabilidad();
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -124,10 +123,14 @@ public class UnderwaterSwimController : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    private void AplicarBoyantez()
+    //El agua empuja hacia arriba casi tanto como tira la gravedad. La diferencia hace que el jugador se hunda despacio.
+    //Con drag, la velocidad final de caída ≈ aceleración que sobra / dragAgua.
+    //Por eso la aceleración que dejamos sin cancelar es velocidadHundimiento * dragAgua: así se hunde a velocidadHundimiento m/s
+    private void AplicarFlotabilidad()
     {
-        if (boyantezNeutral) rb.AddForce(Vector3.up * (Physics.gravity.magnitude * rb.mass), ForceMode.Force);
-        else rb.AddForce(Vector3.up * fuerzaBoyantez, ForceMode.Acceleration);
+        float aceleracionHundimiento = velocidadHundimiento * dragAgua;
+        float empujeAgua = Physics.gravity.magnitude - aceleracionHundimiento;
+        rb.AddForce(Vector3.up * empujeAgua, ForceMode.Acceleration);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/

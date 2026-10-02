@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-//Vida del jugador. Los enemigos la reducen con RecibirDaño y la Tienda puede subir el máximo con AumentarVidaMaxima
+//Vida del jugador. Los enemigos la reducen con RecibirDaño y el CuboCompra puede subir el máximo con AumentarVidaMaxima
 public class VidaJugador : MonoBehaviour
 {
     [Header("Vida")]
@@ -57,7 +57,7 @@ public class VidaJugador : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Sube la vida máxima y cura al jugador hasta el nuevo máximo (lo usa la Tienda al comprar la mejora)
+    //Sube la vida máxima y cura al jugador hasta el nuevo máximo (lo usa el CuboCompra al comprar la mejora)
     public void AumentarVidaMaxima(float cantidad)
     {
         if (cantidad <= 0f) return;

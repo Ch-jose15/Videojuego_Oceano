@@ -2,38 +2,34 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-//Tienda sólida con una zona alrededor (objeto hijo con ZonaTienda).
-//Mientras el jugador está dentro de la zona, la tienda se resalta y:
-//  - Si lleva un objeto en la mano: aparece "Pulsa F para vender" y con F se vende directamente.
-//  - Si no lleva nada: aparece "Clic para comprar" y con el clic izquierdo se abre el panel de mejoras
-//    (Mejorar Vida, Mejorar Stamina, Cerrar). Así el ratón sigue bloqueado y la cámara gira normal hasta abrir el panel.
-//Mientras el panel de comprar está abierto el juego se pausa (ver EstadoJuego)
+//Cubo de compra, con una zona alrededor (objeto hijo con ZonaJugador).
+//Mientras el jugador está dentro de la zona con las manos vacías, el cubo se resalta y aparece "Clic para comprar".
+//Con el clic izquierdo se abre el panel de mejoras (Mejorar Vida, Mejorar Stamina, Desbloquear Disparo, Cerrar).
+//Así el ratón sigue bloqueado y la cámara gira normal hasta abrir el panel.
+//Mientras el panel está abierto el juego se pausa (ver EstadoJuego)
 [RequireComponent(typeof(Collider))]
-public class Tienda : MonoBehaviour
+public class CuboCompra : MonoBehaviour
 {
     [Header("Referencias")]
-    public InteracciónAgarrar jugador;
-    public GameObject avisoVender;      //Texto "Pulsa F para vender"
+    public InteracciónAgarrar jugador;  //Si está vacío, se busca en la escena
     public GameObject avisoComprar;     //Texto "Clic para comprar"
     public GameObject panelComprar;     //Panel con los botones de mejoras y Cerrar
-
-    [Header("Feedback al vender")]
-    public TextoFlotante plantillaTextoVenta; //Texto desactivado en el Canvas que se copia al vender ("+15$")
-    public AudioClip sonidoVenta;             //Se asigna a mano en el Inspector
 
     [Header("Compras")]
     public VidaJugador vidaJugador;         //Si está vacío, se busca en el jugador
     public StaminaJugador staminaJugador;   //Si está vacío, se busca en el jugador
+    public DisparoJugador disparoJugador;   //Si está vacío, se busca en el jugador
     public Button botonMejorarVida;
     public Button botonMejorarStamina;
+    public Button botonDesbloquearDisparo;  //Desaparece al comprarlo (solo se compra una vez)
     public Button botonCerrar;
     public int costeMejoraVida = 30;
     public float cantidadMejoraVida = 25f;
     public int costeMejoraStamina = 30;
     public float cantidadMejoraStamina = 30f; //30 = el coste de un dash, así cada mejora da exactamente 1 dash más
+    public int costeDesbloquearDisparo = 50;
 
     [Header("Teclas")]
-    public KeyCode teclaVender = KeyCode.F;
     public KeyCode teclaCerrar = KeyCode.Escape;
 
     [Header("Resaltado")]
@@ -42,11 +38,9 @@ public class Tienda : MonoBehaviour
     [Header("Animación del menú")]
     public float duracionPop = 0.18f; //Segundos que tarda el panel en crecer de 0 a su tamaño normal
 
-    private Collider colliderTienda;
-    private Renderer rendererTienda;
-    private AudioSource fuenteAudio;
+    private Renderer rendererCubo;
     private Color colorOriginal;
-    private bool resaltada = false;
+    private bool resaltado = false;
     private bool comprarAbierto = false;
     private bool jugadorEnZona = false;
     private Transform panelAnimado; //Panel que está haciendo la animación "pop" (null si ninguno)
@@ -56,30 +50,29 @@ public class Tienda : MonoBehaviour
 
     void Awake()
     {
-        colliderTienda = GetComponent<Collider>();
-        rendererTienda = GetComponent<Renderer>();
+        rendererCubo = GetComponent<Renderer>();
 
-        //AudioSource para el sonido de venta. Si no hay uno en el objeto, lo creamos
-        fuenteAudio = GetComponent<AudioSource>();
-        if (fuenteAudio == null) fuenteAudio = gameObject.AddComponent<AudioSource>();
-        fuenteAudio.playOnAwake = false;
-
-        //La tienda es sólida: no se puede atravesar (la zona de interacción es el trigger del objeto hijo)
-        colliderTienda.isTrigger = false;
+        //El cubo es sólido: no se puede atravesar (la zona de interacción es el trigger del objeto hijo)
+        GetComponent<Collider>().isTrigger = false;
 
         //Si no se ha asignado el jugador en el Inspector, lo buscamos en la escena
         if (jugador == null) jugador = FindFirstObjectByType<InteracciónAgarrar>();
         if (jugador != null && vidaJugador == null) vidaJugador = jugador.GetComponent<VidaJugador>();
         if (jugador != null && staminaJugador == null) staminaJugador = jugador.GetComponent<StaminaJugador>();
+        if (jugador != null && disparoJugador == null) disparoJugador = jugador.GetComponent<DisparoJugador>();
 
         //Conectamos cada botón con su función
         PrepararBoton(botonMejorarVida, "Mejorar Vida - " + costeMejoraVida + "$", ComprarMejoraVida);
         PrepararBoton(botonMejorarStamina, "Mejorar Stamina - " + costeMejoraStamina + "$", ComprarMejoraStamina);
+        PrepararBoton(botonDesbloquearDisparo, "Desbloquear Disparo - " + costeDesbloquearDisparo + "$", ComprarDesbloquearDisparo);
         PrepararBoton(botonCerrar, "Cerrar", CerrarComprar);
+
+        //Si el disparo ya estuviera desbloqueado (por ejemplo, marcado a mano en el Inspector), ocultamos su botón
+        if (botonDesbloquearDisparo != null && disparoJugador != null && disparoJugador.disparoDesbloqueado)
+            botonDesbloquearDisparo.gameObject.SetActive(false);
 
         //Todo empieza oculto
         OcultarPanel();
-        if (avisoVender != null) avisoVender.SetActive(false);
         if (avisoComprar != null) avisoComprar.SetActive(false);
     }
 
@@ -90,7 +83,10 @@ public class Tienda : MonoBehaviour
         if (jugador == null) return;
 
         ActualizarPop();
-        ActualizarUIZona();
+
+        //El aviso solo se ve en la zona, con las manos vacías y con el panel cerrado
+        bool manosVacias = !jugador.TieneObjetoAgarrado();
+        if (avisoComprar != null) avisoComprar.SetActive(jugadorEnZona && manosVacias && !comprarAbierto);
 
         if (comprarAbierto)
         {
@@ -100,47 +96,26 @@ public class Tienda : MonoBehaviour
 
         if (EstadoJuego.ControlesBloqueados) return;
 
-        if (!jugadorEnZona) return;
-
-        //Con algo en la mano: F vende directamente
-        if (jugador.TieneObjetoAgarrado())
-        {
-            if (Input.GetKeyDown(teclaVender)) Vender();
-        }
-        //Con las manos vacías: clic izquierdo abre el panel de comprar
+        //Clic izquierdo en la zona con las manos vacías: abre el panel
         //(salvo que el ratón esté libre para otra UI, por ejemplo el inventario abierto: ahí el clic es para sus slots)
-        else if (Input.GetMouseButtonDown(0) && !EstadoJuego.RatonLibre)
-        {
-            AbrirComprar();
-        }
+        if (jugadorEnZona && manosVacias && Input.GetMouseButtonDown(0) && !EstadoJuego.RatonLibre) AbrirComprar();
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Los llama ZonaTienda cuando el jugador entra o sale del trigger
+    //Los llama la ZonaJugador hija (eventos alEntrarJugador / alSalirJugador)
     public void JugadorEntraEnZona()
     {
         jugadorEnZona = true;
+        EstadoJuego.CambiarJugadorEnZonaCompra(true); //Para que el clic aquí sea para comprar y no para disparar
         Resaltar();
     }
 
     public void JugadorSaleDeZona()
     {
         jugadorEnZona = false;
+        EstadoJuego.CambiarJugadorEnZonaCompra(false);
         QuitarResaltado();
-    }
-
-    /*--------------------------------------------------------------------------------------------------------------------------*/
-
-    //Cada frame decide qué aviso se ve en la zona: el de vender (con objeto) o el de comprar (sin objeto).
-    //Se hace cada frame porque el jugador puede coger o guardar objetos estando dentro de la zona
-    private void ActualizarUIZona()
-    {
-        bool enZonaSinPanel = jugadorEnZona && !comprarAbierto;
-        bool llevaObjeto = jugador.TieneObjetoAgarrado();
-
-        if (avisoVender != null) avisoVender.SetActive(enZonaSinPanel && llevaObjeto);
-        if (avisoComprar != null) avisoComprar.SetActive(enZonaSinPanel && !llevaObjeto);
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -208,47 +183,21 @@ public class Tienda : MonoBehaviour
 
     private void Resaltar()
     {
-        if (resaltada || rendererTienda == null) return;
+        if (resaltado || rendererCubo == null) return;
 
-        colorOriginal = rendererTienda.material.color;
-        rendererTienda.material.color = colorResaltado;
-        resaltada = true;
+        colorOriginal = rendererCubo.material.color;
+        rendererCubo.material.color = colorResaltado;
+        resaltado = true;
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
     private void QuitarResaltado()
     {
-        if (!resaltada || rendererTienda == null) return;
+        if (!resaltado || rendererCubo == null) return;
 
-        rendererTienda.material.color = colorOriginal;
-        resaltada = false;
-    }
-
-    /*--------------------------------------------------------------------------------------------------------------------------*/
-
-    //Vende el objeto que llevamos en la mano. Si no llevamos nada, no hace nada
-    private void Vender()
-    {
-        //Le quitamos el objeto de la mano al jugador (se queda con las manos libres)
-        GameObject objeto = jugador.QuitarObjetoAgarrado();
-        if (objeto == null) return;
-
-        //Miramos cuánto vale. Si no tiene ValorItem, vale 0 y avisamos en consola
-        int valor = 0;
-        ValorItem valorItem = objeto.GetComponent<ValorItem>();
-        if (valorItem != null) valor = valorItem.valor;
-        else Debug.LogWarning("El objeto " + objeto.name + " no tiene el componente ValorItem, se vende por 0.");
-
-        Dinero.Sumar(valor);
-        Debug.Log("Vendido " + objeto.name + " por " + valor + ". Dinero total: " + Dinero.Total);
-
-        //El objeto vendido desaparece
-        Destroy(objeto);
-
-        //Feedback: texto "+X$" y sonido
-        MostrarTextoVenta(valor);
-        if (sonidoVenta != null) fuenteAudio.PlayOneShot(sonidoVenta);
+        rendererCubo.material.color = colorOriginal;
+        resaltado = false;
     }
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
@@ -291,13 +240,14 @@ public class Tienda : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Hace una copia de la plantilla (en el mismo sitio del Canvas), la activa y le pone el texto
-    private void MostrarTextoVenta(int valor)
+    //Solo se puede comprar una vez: si hay dinero, lo gasta, desbloquea el disparo y oculta el botón
+    public void ComprarDesbloquearDisparo()
     {
-        if (plantillaTextoVenta == null) return;
+        if (disparoJugador == null || disparoJugador.disparoDesbloqueado) return;
+        if (!Dinero.Gastar(costeDesbloquearDisparo)) return;
 
-        TextoFlotante copia = Instantiate(plantillaTextoVenta, plantillaTextoVenta.transform.parent);
-        copia.gameObject.SetActive(true);
-        copia.Mostrar("+" + valor + "$");
+        disparoJugador.Desbloquear();
+        if (botonDesbloquearDisparo != null) botonDesbloquearDisparo.gameObject.SetActive(false);
+        Debug.Log("Disparo desbloqueado");
     }
 }

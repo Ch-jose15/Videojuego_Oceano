@@ -2,14 +2,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 //Estado general de la partida que varios scripts necesitan consultar:
-// - Si hay un menú abierto (la Tienda): el juego se pausa y el jugador no usa sus teclas.
+// - Si hay un menú abierto (el panel del CuboCompra): el juego se pausa y el jugador no usa sus teclas.
 // - Si el ratón tiene que estar libre (menú de la tienda o inventario): se ve el cursor y la cámara no gira.
+// - Si el jugador está en la zona del CuboCompra: ahí el clic izquierdo es para comprar, no para disparar.
 public static class EstadoJuego
 {
     public static bool MenuAbierto { get; private set; } = false;
 
     //El inventario se usa con el ratón pero NO pausa el juego
     private static bool inventarioAbierto = false;
+
+    //True mientras el jugador está en la zona del CuboCompra
+    public static bool JugadorEnZonaCompra { get; private set; } = false;
 
     //Frame en el que se cerró el último menú
     private static int frameCierreMenu = -1;
@@ -59,6 +63,14 @@ public static class EstadoJuego
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
+    //Lo llama el CuboCompra al entrar/salir el jugador de su zona
+    public static void CambiarJugadorEnZonaCompra(bool enZona)
+    {
+        JugadorEnZonaCompra = enZona;
+    }
+
+    /*--------------------------------------------------------------------------------------------------------------------------*/
+
     //Si alguna UI necesita el ratón, lo liberamos; si no, lo bloqueamos en el centro para mirar con él
     private static void AplicarCursor()
     {
@@ -91,6 +103,7 @@ public static class EstadoJuego
     {
         MenuAbierto = false;
         inventarioAbierto = false;
+        JugadorEnZonaCompra = false;
         frameCierreMenu = -1;
         Time.timeScale = 1f;
     }

@@ -164,3 +164,7 @@ MonoBehaviour:
   distanciaAtaque: 1.6500001
   "da\xF1oPorGolpe": 5
   cooldownGolpe: 1
+  vidaMaxima: 20
+  vidaActual: 0
+  colorAlMorir: {r: 1, g: 1, b: 1, a: 1}
+  duracionMuerte: 0.15

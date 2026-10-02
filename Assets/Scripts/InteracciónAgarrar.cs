@@ -137,7 +137,7 @@ public class InteracciónAgarrar : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Quita el objeto de la mano y lo devuelve para que otro script haga algo con él (por ejemplo, la Tienda lo vende).
+    //Quita el objeto de la mano y lo devuelve para que otro script haga algo con él (por ejemplo, el CuboVenta lo vende).
     //A diferencia de Soltar(), NO le devuelve la física: quien lo reciba decide qué hacer con él.
     public GameObject QuitarObjetoAgarrado()
     {

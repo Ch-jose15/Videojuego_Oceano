@@ -80,7 +80,7 @@ public class StaminaJugador : MonoBehaviour
 
     /*--------------------------------------------------------------------------------------------------------------------------*/
 
-    //Sube la stamina máxima y la rellena hasta el nuevo máximo (lo usa la Tienda al comprar la mejora)
+    //Sube la stamina máxima y la rellena hasta el nuevo máximo (lo usa el CuboCompra al comprar la mejora)
     public void AumentarStaminaMaxima(float cantidad)
     {
         if (cantidad <= 0f) return;
