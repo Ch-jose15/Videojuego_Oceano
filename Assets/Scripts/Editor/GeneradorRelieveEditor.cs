@@ -1,14 +1,13 @@
+// Añade al Inspector del GeneradorRelieve los botones para generar el relieve con la semilla actual o con una nueva.
 using UnityEditor;
 using UnityEngine;
 
-//Añade los botones de "Generar" al Inspector del GeneradorRelieve.
-//Tiene que estar en una carpeta llamada "Editor": así Unity sabe que solo se usa en el editor y no va en el juego final
 [CustomEditor(typeof(GeneradorRelieve))]
 public class GeneradorRelieveEditor : Editor
 {
+    // Dibuja los parámetros del generador y los botones de generar
     public override void OnInspectorGUI()
     {
-        //Dibuja todos los parámetros normales
         DrawDefaultInspector();
 
         GeneradorRelieve generador = (GeneradorRelieve)target;
@@ -28,18 +27,15 @@ public class GeneradorRelieveEditor : Editor
         }
     }
 
-    /*--------------------------------------------------------------------------------------------------------------------------*/
-
+    // Genera el relieve permitiendo deshacerlo con Ctrl+Z y marca los datos para guardarlos
     private void Generar(GeneradorRelieve generador)
     {
         TerrainData datos = generador.GetComponent<Terrain>().terrainData;
 
-        //Para poder deshacer con Ctrl+Z
         Undo.RegisterCompleteObjectUndo(datos, "Generar relieve");
 
         generador.Generar();
 
-        //Marcamos los datos como modificados para que se guarden
         EditorUtility.SetDirty(datos);
     }
 }
