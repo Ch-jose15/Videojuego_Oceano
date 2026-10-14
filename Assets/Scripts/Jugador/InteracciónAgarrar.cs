@@ -1,11 +1,12 @@
-// Permite al jugador coger y soltar objetos con la tecla E, resaltando el objeto que está mirando.
+// Gestiona la tecla E del jugador: si mira una planta curativa la usa y, si no, coge, suelta y resalta objetos en la mano derecha.
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class InteracciónAgarrar : MonoBehaviour
 {
     [Header("Referencias")]
     public Transform camara;
-    public Transform puntoMano;
+    [FormerlySerializedAs("puntoMano")] public Transform puntoManoDerecha;
 
     [Header("Ajustes")]
     public float distanciaAlcance = 5f;
@@ -21,18 +22,32 @@ public class InteracciónAgarrar : MonoBehaviour
     private GameObject objetivoActual;
     private Renderer rendererObjetivo;
     private Color colorOriginalObjetivo;
+    private VidaJugador vidaJugador;
 
-    // Resalta el objeto mirado y gestiona la tecla de coger y soltar
+    // Busca la vida del jugador para poder curarle con las plantas
+    void Awake()
+    {
+        vidaJugador = GetComponent<VidaJugador>();
+    }
+
+    // Lanza un rayo, resalta el objeto mirado y decide qué hace la tecla E
     void Update()
     {
         if (EstadoJuego.ControlesBloqueados) return;
 
-        if (objetoAgarrado == null) ActualizarObjetivoResaltado();
+        Collider mirado = ColliderMirado();
+        PlantaCurativa planta = mirado != null ? mirado.GetComponentInParent<PlantaCurativa>() : null;
+
+        if (objetoAgarrado == null) ActualizarObjetivoResaltado(mirado);
         else QuitarResaltadoActual();
 
         if (Input.GetKeyDown(teclaInteractuar))
         {
-            if (objetoAgarrado == null)
+            if (planta != null)
+            {
+                planta.Usar(vidaJugador);
+            }
+            else if (objetoAgarrado == null)
             {
                 if (objetivoActual != null) Agarrar(objetivoActual);
             }
@@ -40,17 +55,19 @@ public class InteracciónAgarrar : MonoBehaviour
         }
     }
 
-    // Busca con un rayo el objeto recogible al que mira el jugador y lo resalta
-    private void ActualizarObjetivoResaltado()
+    // Devuelve el collider al que mira el jugador dentro de su alcance, o null si no mira nada
+    private Collider ColliderMirado()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(camara.position, camara.forward, out hit, distanciaAlcance)) return hit.collider;
+        return null;
+    }
+
+    // Resalta el objeto recogible al que mira el jugador
+    private void ActualizarObjetivoResaltado(Collider mirado)
     {
         GameObject nuevoObjetivo = null;
-
-        Ray rayo = new Ray(camara.position, camara.forward);
-        RaycastHit hit;
-        if (Physics.Raycast(rayo, out hit, distanciaAlcance))
-        {
-            if (hit.collider.CompareTag(tagItem)) nuevoObjetivo = hit.collider.gameObject;
-        }
+        if (mirado != null && mirado.CompareTag(tagItem)) nuevoObjetivo = mirado.gameObject;
 
         if (nuevoObjetivo != objetivoActual)
         {
@@ -90,7 +107,7 @@ public class InteracciónAgarrar : MonoBehaviour
 
         if (colliderObjetoAgarrado != null) colliderObjetoAgarrado.enabled = false;
 
-        objeto.transform.SetParent(puntoMano);
+        objeto.transform.SetParent(puntoManoDerecha);
         objeto.transform.localPosition = Vector3.zero;
         objeto.transform.localRotation = Quaternion.identity;
     }

@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Item
+  - PlantaCurativa
   layers:
   - Default
   - TransparentFX

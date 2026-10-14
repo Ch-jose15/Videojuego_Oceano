@@ -129,7 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5586034}
   m_Layer: 0
-  m_Name: PuntoMano
+  m_Name: PuntoManoDerecha
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 5586033}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.3, z: 1}
+  m_LocalPosition: {x: 0.45, y: -0.35, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2734,7 +2734,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: "Assembly-CSharp::Interacci\xF3nAgarrar"
   camara: {fileID: 787407828}
-  puntoMano: {fileID: 5586034}
+  puntoManoDerecha: {fileID: 5586034}
   distanciaAlcance: 5
   teclaInteractuar: 101
   tagItem: Item
@@ -2768,6 +2768,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisparoJugador
   camara: {fileID: 787407828}
+  puntoDisparo: {fileID: 5586034}
   prefabProyectil: {fileID: 1708323913062622734, guid: 049f7b47dca05bf4a919961c585e1356, type: 3}
   disparoDesbloqueado: 0
   velocidadProyectil: 25
@@ -4020,6 +4021,37 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &744984623
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 744984624}
+  m_Layer: 0
+  m_Name: PuntoManoIzquierda
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &744984624
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744984623}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.45, y: -0.35, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 787407828}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &755980784
 GameObject:
   m_ObjectHideFlags: 0
@@ -4174,6 +4206,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5586034}
+  - {fileID: 744984624}
   m_Father: {fileID: 573409931}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &787407829
@@ -6423,6 +6456,8 @@ MonoBehaviour:
   distanciaMinimaBase: 200
   preferenciaProfundidad: 0.85
   preferenciaLejosDeBase: 0.3
+  apoyarEnSuelo: 0
+  objetosAEvitar: []
 --- !u!4 &1261210725
 Transform:
   m_ObjectHideFlags: 0
@@ -7738,6 +7773,8 @@ MonoBehaviour:
   distanciaMinimaBase: 25
   preferenciaProfundidad: 0
   preferenciaLejosDeBase: 0.25
+  apoyarEnSuelo: 0
+  objetosAEvitar: []
 --- !u!4 &1482793748
 Transform:
   m_ObjectHideFlags: 0

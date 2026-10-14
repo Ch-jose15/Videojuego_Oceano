@@ -1,4 +1,4 @@
-// Genera copias de prefabs en posiciones aleatorias del Terrain, sobre el suelo y bajo el agua, con preferencias opcionales de profundidad y distancia a la base.
+// Genera copias de prefabs en posiciones aleatorias del Terrain, sobre el suelo y bajo el agua, con preferencias opcionales de profundidad, distancia a la base y modelos a evitar.
 using UnityEngine;
 
 public class GeneradorObjetos : MonoBehaviour
@@ -26,10 +26,15 @@ public class GeneradorObjetos : MonoBehaviour
     [Range(0f, 1f)] public float preferenciaProfundidad = 0f;
     [Range(0f, 1f)] public float preferenciaLejosDeBase = 0f;
 
+    [Header("Colocación (opcional)")]
+    public bool apoyarEnSuelo = false;
+    public GameObject[] objetosAEvitar;
+
     private const int IntentosMaximos = 100;
 
     private float alturaSueloMinima;
     private float alturaSueloMaxima;
+    private Bounds[] zonasAEvitar = new Bounds[0];
 
     // Usa el Terrain activo si no hay uno asignado y genera los objetos
     void Start()
@@ -48,6 +53,7 @@ public class GeneradorObjetos : MonoBehaviour
         }
 
         CalcularRangoDelSuelo();
+        CalcularZonasAEvitar();
 
         int generados = 0;
         for (int i = 0; i < cantidad; i++)
@@ -80,14 +86,16 @@ public class GeneradorObjetos : MonoBehaviour
             float z = Random.Range(origen.z + margenBordeTerreno, origen.z + tamaño.z - margenBordeTerreno);
 
             float alturaSuelo = terreno.SampleHeight(new Vector3(x, 0f, z)) + origen.y;
-            float y = alturaSuelo + Random.Range(alturaMinSobreSuelo, alturaMaxSobreSuelo);
+            float y = apoyarEnSuelo ? alturaSuelo : alturaSuelo + Random.Range(alturaMinSobreSuelo, alturaMaxSobreSuelo);
 
             posicion = new Vector3(x, y, z);
+            Vector3 centroHueco = apoyarEnSuelo ? posicion + Vector3.up * (radioLibre + 0.1f) : posicion;
 
             if (y > limiteAgua) continue;
             if (jugador != null && Vector3.Distance(posicion, jugador.position) < distanciaMinimaJugador) continue;
             if (zonaBase != null && DistanciaHorizontal(posicion, zonaBase.position) < distanciaMinimaBase) continue;
-            if (Physics.CheckSphere(posicion, radioLibre, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+            if (Physics.CheckSphere(centroHueco, radioLibre, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+            if (DentroDeZonaAEvitar(centroHueco)) continue;
 
             if (Random.value > ProbabilidadAceptar(posicion, alturaSuelo)) continue;
 
@@ -134,6 +142,40 @@ public class GeneradorObjetos : MonoBehaviour
 
         alturaSueloMinima = terreno.transform.position.y + minimo;
         alturaSueloMaxima = terreno.transform.position.y + maximo;
+    }
+
+    // Guarda el volumen que ocupa cada modelo a evitar, a partir de sus Renderers
+    private void CalcularZonasAEvitar()
+    {
+        if (objetosAEvitar == null)
+        {
+            zonasAEvitar = new Bounds[0];
+            return;
+        }
+
+        zonasAEvitar = new Bounds[objetosAEvitar.Length];
+        for (int i = 0; i < objetosAEvitar.Length; i++)
+        {
+            if (objetosAEvitar[i] == null) continue;
+
+            Renderer[] renderers = objetosAEvitar[i].GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) continue;
+
+            Bounds volumen = renderers[0].bounds;
+            foreach (Renderer r in renderers) volumen.Encapsulate(r.bounds);
+            volumen.Expand(radioLibre * 2f);
+            zonasAEvitar[i] = volumen;
+        }
+    }
+
+    // Indica si un punto cae dentro del volumen de alguno de los modelos a evitar
+    private bool DentroDeZonaAEvitar(Vector3 punto)
+    {
+        foreach (Bounds volumen in zonasAEvitar)
+        {
+            if (volumen.size != Vector3.zero && volumen.Contains(punto)) return true;
+        }
+        return false;
     }
 
     // Devuelve la distancia entre dos puntos sin tener en cuenta la altura

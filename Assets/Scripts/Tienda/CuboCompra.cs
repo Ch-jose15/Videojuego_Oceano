@@ -1,4 +1,4 @@
-// Cubo de compra: con las manos vacías en su zona, un clic abre el panel de mejoras (vida, stamina y disparo) y pausa el juego.
+// Cubo de compra: con las manos vacías en su zona, un clic abre el panel de mejoras (vida, stamina, disparo y linterna) y pausa el juego.
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +24,12 @@ public class CuboCompra : MonoBehaviour
     public int costeMejoraStamina = 30;
     public float cantidadMejoraStamina = 30f;
     public int costeDesbloquearDisparo = 50;
+
+    [Header("Linterna")]
+    public Button botonLinterna;
+    public int costeLinterna = 0;
+    public Linterna prefabLinterna;
+    public Transform puntoManoIzquierda;
 
     [Header("Teclas")]
     public KeyCode teclaCerrar = KeyCode.Escape;
@@ -53,14 +59,18 @@ public class CuboCompra : MonoBehaviour
         if (jugador != null && vidaJugador == null) vidaJugador = jugador.GetComponent<VidaJugador>();
         if (jugador != null && staminaJugador == null) staminaJugador = jugador.GetComponent<StaminaJugador>();
         if (jugador != null && disparoJugador == null) disparoJugador = jugador.GetComponent<DisparoJugador>();
+        if (jugador != null && puntoManoIzquierda == null && jugador.camara != null) puntoManoIzquierda = jugador.camara.Find("PuntoManoIzquierda");
 
         PrepararBoton(botonMejorarVida, "Mejorar Vida - " + costeMejoraVida + "$", ComprarMejoraVida);
         PrepararBoton(botonMejorarStamina, "Mejorar Stamina - " + costeMejoraStamina + "$", ComprarMejoraStamina);
         PrepararBoton(botonDesbloquearDisparo, "Desbloquear Disparo - " + costeDesbloquearDisparo + "$", ComprarDesbloquearDisparo);
+        PrepararBoton(botonLinterna, "Linterna - " + costeLinterna + "$", ComprarLinterna);
         PrepararBoton(botonCerrar, "Cerrar", CerrarComprar);
 
         if (botonDesbloquearDisparo != null && disparoJugador != null && disparoJugador.disparoDesbloqueado)
             botonDesbloquearDisparo.gameObject.SetActive(false);
+
+        if (botonLinterna != null && TieneLinterna()) botonLinterna.gameObject.SetActive(false);
 
         OcultarPanel();
         if (avisoComprar != null) avisoComprar.SetActive(false);
@@ -211,5 +221,26 @@ public class CuboCompra : MonoBehaviour
         disparoJugador.Desbloquear();
         if (botonDesbloquearDisparo != null) botonDesbloquearDisparo.gameObject.SetActive(false);
         Debug.Log("Disparo desbloqueado");
+    }
+
+    // Compra la linterna una sola vez y la coloca de forma permanente en la mano izquierda, ocultando después su botón
+    public void ComprarLinterna()
+    {
+        if (prefabLinterna == null || puntoManoIzquierda == null || TieneLinterna()) return;
+        if (costeLinterna > 0 && !Dinero.Gastar(costeLinterna)) return;
+
+        Linterna linterna = Instantiate(prefabLinterna, puntoManoIzquierda);
+        linterna.transform.localPosition = Vector3.zero;
+        linterna.transform.localRotation = Quaternion.identity;
+        linterna.name = "Linterna";
+
+        if (botonLinterna != null) botonLinterna.gameObject.SetActive(false);
+        Debug.Log("Linterna comprada");
+    }
+
+    // Indica si el jugador ya tiene la linterna en la mano izquierda
+    private bool TieneLinterna()
+    {
+        return puntoManoIzquierda != null && puntoManoIzquierda.GetComponentInChildren<Linterna>() != null;
     }
 }
