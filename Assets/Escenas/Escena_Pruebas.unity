@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &6583324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1187,10 +1187,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 029ce806266e94249a5e144eb0c615eb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1784699203}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 029ce806266e94249a5e144eb0c615eb, type: 3}
 --- !u!1 &207336777
 GameObject:
@@ -5201,7 +5198,7 @@ MonoBehaviour:
   tessellationFactorFadeRange: 1850
   refractionColor: {r: 0.8271866, g: 1, b: 1, a: 1}
   maxRefractionDistance: 0.5
-  absorptionDistance: 3
+  absorptionDistance: 20
   scatteringColor: {r: 0, g: 0.50074744, b: 0.50074744, a: 1}
   ambientScattering: 0.2
   heightScattering: 0.2
@@ -5209,13 +5206,13 @@ MonoBehaviour:
   directLightTipScattering: 0.6
   directLightBodyScattering: 0.5
   maximumHeightOverride: 0
-  caustics: 0
+  caustics: 1
   causticsIntensity: 0.5
   causticsPlaneBlendDistance: 1
   causticsResolution: 256
   causticsBand: 2
   virtualPlaneDistance: 4
-  causticsTilingFactor: 1
+  causticsTilingFactor: 10
   causticsDirectionalShadow: 0
   causticsDirectionalShadowDimmer: 0.25
   renderingLayerMask: 1
@@ -5627,28 +5624,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 029ce806266e94249a5e144eb0c615eb, type: 3}
   m_PrefabInstance: {fileID: 170948289}
   m_PrefabAsset: {fileID: 0}
---- !u!64 &1784699203
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1784699201}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
 --- !u!1 &1787166367
 GameObject:
   m_ObjectHideFlags: 0
@@ -6200,7 +6175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ada2834b0e75ddc47b968e4e67a060d4, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -50.76
+      value: -51.8
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ada2834b0e75ddc47b968e4e67a060d4, type: 3}
       propertyPath: m_LocalPosition.z
