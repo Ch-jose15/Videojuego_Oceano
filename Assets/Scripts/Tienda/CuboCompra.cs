@@ -76,6 +76,36 @@ public class CuboCompra : MonoBehaviour
         if (avisoComprar != null) avisoComprar.SetActive(false);
     }
 
+    // Empieza a escuchar la muerte del jugador para cerrar el panel
+    void OnEnable()
+    {
+        MuerteJugador.AlMorirJugador += CerrarSiAbierto;
+    }
+
+    // Deja de escuchar la muerte del jugador
+    void OnDisable()
+    {
+        MuerteJugador.AlMorirJugador -= CerrarSiAbierto;
+    }
+
+    // Cierra el panel de mejoras solo si está abierto
+    private void CerrarSiAbierto()
+    {
+        if (comprarAbierto) CerrarComprar();
+    }
+
+    // Vuelve a mostrar el botón de la linterna para poder comprarla otra vez
+    public void VolverAVenderLinterna()
+    {
+        if (botonLinterna != null) botonLinterna.gameObject.SetActive(true);
+    }
+
+    // Vuelve a mostrar el botón de desbloquear disparo para poder comprarlo otra vez
+    public void VolverAVenderDisparo()
+    {
+        if (botonDesbloquearDisparo != null) botonDesbloquearDisparo.gameObject.SetActive(true);
+    }
+
     // Muestra el aviso de compra y abre o cierra el panel según el clic y la tecla de cerrar
     void Update()
     {

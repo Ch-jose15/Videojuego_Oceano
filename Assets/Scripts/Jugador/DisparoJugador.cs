@@ -57,6 +57,12 @@ public class DisparoJugador : MonoBehaviour
         disparoDesbloqueado = true;
     }
 
+    // Vuelve a bloquear el disparo (por ejemplo al morir, si así se configura)
+    public void Bloquear()
+    {
+        disparoDesbloqueado = false;
+    }
+
     // Crea un proyectil en la mano derecha y lo lanza hacia el punto al que apunta el centro de la cámara
     private void Disparar()
     {

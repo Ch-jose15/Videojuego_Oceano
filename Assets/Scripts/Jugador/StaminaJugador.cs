@@ -56,6 +56,13 @@ public class StaminaJugador : MonoBehaviour
         ActualizarBarra();
     }
 
+    // Rellena la stamina hasta el máximo actual
+    public void RellenarStamina()
+    {
+        staminaActual = staminaMaxima;
+        ActualizarBarra();
+    }
+
     // Devuelve la stamina actual del jugador
     public float ObtenerStamina()
     {

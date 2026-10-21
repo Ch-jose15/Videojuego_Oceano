@@ -45,7 +45,7 @@ public class InventarioJugador : MonoBehaviour
         }
     }
 
-    // Saca el objeto de un slot, lo reactiva y lo pone en la mano del jugador
+    // Saca el objeto de un slot, lo reactiva, lo pone en la mano del jugador y cierra el inventario
     public void SacarAMano(int slot)
     {
         if (agarrar == null || agarrar.TieneObjetoAgarrado()) return;
@@ -55,6 +55,8 @@ public class InventarioJugador : MonoBehaviour
 
         objeto.SetActive(true);
         agarrar.Agarrar(objeto);
+
+        if (uiInventario != null) uiInventario.Cerrar();
     }
 
     // Indica si queda algún slot libre
@@ -95,6 +97,23 @@ public class InventarioJugador : MonoBehaviour
 
         if (objeto != null) AlCambiar?.Invoke();
         return objeto;
+    }
+
+    // Destruye para siempre todos los objetos guardados y devuelve cuántos había
+    public int VaciarYDestruir()
+    {
+        int cantidad = 0;
+        for (int i = 0; i < NumeroSlots; i++)
+        {
+            if (slots[i] == null) continue;
+
+            Destroy(slots[i]);
+            slots[i] = null;
+            cantidad++;
+        }
+
+        if (cantidad > 0) AlCambiar?.Invoke();
+        return cantidad;
     }
 
     // Devuelve el índice del primer slot libre o -1 si están todos ocupados

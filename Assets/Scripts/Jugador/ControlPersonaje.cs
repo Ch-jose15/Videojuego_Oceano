@@ -56,9 +56,11 @@ public class UnderwaterSwimController : MonoBehaviour
         if (stamina == null) stamina = GetComponent<StaminaJugador>();
     }
 
-    // Gestiona la cámara, la regeneración de stamina y la tecla de dash cada frame
+    // Gestiona el bloqueo del ratón, la cámara, la regeneración de stamina y la tecla de dash cada frame
     void Update()
     {
+        EstadoJuego.MantenerCursorTrasCerrar();
+
         if (EstadoJuego.ControlesBloqueados) return;
 
         if (!EstadoJuego.RatonLibre) ManejarMirarCamara();
@@ -98,7 +100,7 @@ public class UnderwaterSwimController : MonoBehaviour
     // Empuja al jugador en la dirección de las teclas pulsadas
     private void ManejarMovimiento()
     {
-        if (dasheando || camara == null) return;
+        if (dasheando || camara == null || EstadoJuego.JugadorMuerto) return;
 
         float ejeH = Input.GetAxis("Horizontal");
         float ejeV = Input.GetAxis("Vertical");

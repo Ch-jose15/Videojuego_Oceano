@@ -1,4 +1,5 @@
-// Guarda la vida del jugador, la actualiza en su barra y permite recibir daño, curarse y subir el máximo.
+// Guarda la vida del jugador, la actualiza en su barra y permite recibir daño, curarse, rellenarse y subir el máximo; avisa cuando llega a cero.
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,11 @@ public class VidaJugador : MonoBehaviour
     [Header("UI")]
     public Image rellenoBarraVida;
     public RectTransform barraVida;
+
+    [Header("Estado")]
+    public bool invulnerable = false;
+
+    public event Action AlQuedarseSinVida;
 
     private float vidaActual;
     private float vidaMaximaInicial;
@@ -25,12 +31,21 @@ public class VidaJugador : MonoBehaviour
         if (barraVida != null) anchoInicialBarra = barraVida.sizeDelta.x;
     }
 
-    // Resta vida al jugador
+    // Resta vida al jugador, salvo si es invulnerable o ya está a cero, y avisa si llega a cero
     public void RecibirDaño(float cantidad)
     {
-        if (cantidad <= 0f) return;
+        if (cantidad <= 0f || invulnerable || vidaActual <= 0f) return;
 
         vidaActual = Mathf.Clamp(vidaActual - cantidad, 0f, vidaMaxima);
+        ActualizarBarra();
+
+        if (vidaActual <= 0f) AlQuedarseSinVida?.Invoke();
+    }
+
+    // Rellena la vida hasta el máximo actual
+    public void RellenarVida()
+    {
+        vidaActual = vidaMaxima;
         ActualizarBarra();
     }
 

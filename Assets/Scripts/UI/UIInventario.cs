@@ -49,6 +49,15 @@ public class UIInventario : MonoBehaviour
         EstadoJuego.CambiarInventarioAbierto(panelInventario.activeSelf);
     }
 
+    // Oculta el panel del inventario si está abierto y vuelve a bloquear el ratón
+    public void Cerrar()
+    {
+        if (!EstaVisible()) return;
+
+        panelInventario.SetActive(false);
+        EstadoJuego.CambiarInventarioAbierto(false);
+    }
+
     // Indica si el panel del inventario se está mostrando
     public bool EstaVisible()
     {

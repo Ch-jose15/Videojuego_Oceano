@@ -58,10 +58,31 @@ public class EnemigoSimple : MonoBehaviour
         ElegirNuevoDestino();
     }
 
+    // Empieza a escuchar la muerte del jugador
+    void OnEnable()
+    {
+        MuerteJugador.AlMorirJugador += OlvidarJugador;
+    }
+
+    // Deja de escuchar la muerte del jugador
+    void OnDisable()
+    {
+        MuerteJugador.AlMorirJugador -= OlvidarJugador;
+    }
+
+    // Deja de perseguir al jugador y vuelve a deambular
+    private void OlvidarJugador()
+    {
+        if (!persiguiendo) return;
+
+        persiguiendo = false;
+        ElegirNuevoDestino();
+    }
+
     // Decide si persigue o deja de perseguir al jugador y le golpea si está cerca
     void Update()
     {
-        if (jugador == null || EstadoJuego.MenuAbierto || muerto) return;
+        if (jugador == null || EstadoJuego.MenuAbierto || EstadoJuego.JugadorMuerto || muerto) return;
 
         float distancia = Vector3.Distance(transform.position, jugador.position);
 
