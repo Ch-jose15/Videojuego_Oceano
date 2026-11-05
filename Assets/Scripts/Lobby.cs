@@ -30,8 +30,6 @@ public class Lobby : MonoBehaviour
         NetworkManager.Singleton.OnClientDisconnectCallback += AlDesconectar;
     }
 
-    // ───── RED LOCAL (LAN) ─────
-
     // Crea la partida en red local y lleva a todos a la escena de juego
     public void IniciarHost()
     {
@@ -55,8 +53,6 @@ public class Lobby : MonoBehaviour
         textoEstado.text = "Conectando a " + ip + "...";
         NetworkManager.Singleton.StartClient();
     }
-
-    // ───── ONLINE (RELAY) ─────
 
     // Inicia los servicios de Unity e inicia sesión anónima, una sola vez
     async Task PrepararServicios()
@@ -128,8 +124,6 @@ public class Lobby : MonoBehaviour
         NetworkManager.Singleton.OnClientConnectedCallback -= AlConectarseJugador;
         NetworkManager.Singleton.SceneManager.LoadScene(escenaJuego, LoadSceneMode.Single);
     }
-
-    // ───── COMÚN ─────
 
     // Avisa si la conexión falla o se corta
     void AlDesconectar(ulong idCliente)
