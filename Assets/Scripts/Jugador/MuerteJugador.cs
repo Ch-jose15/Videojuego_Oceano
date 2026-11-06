@@ -48,7 +48,6 @@ public class MuerteJugador : MonoBehaviour
         if (pantallaMuerte == null) pantallaMuerte = FindFirstObjectByType<PantallaMuerte>();
 
         if (vida != null) vida.AlQuedarseSinVida += Morir;
-        if (puntoReaparicion == null) Debug.LogWarning("MuerteJugador: no hay PuntoReaparicion en la escena; el jugador reaparecerá donde muera.");
     }
 
     // Deja de escuchar a la vida al destruirse
@@ -162,6 +161,9 @@ public class MuerteJugador : MonoBehaviour
     // Lleva al jugador al punto de reaparición parado y le rellena la vida y la stamina
     private void Reaparecer()
     {
+        if (puntoReaparicion == null)
+            puntoReaparicion = FindFirstObjectByType<PuntoReaparicion>();
+
         if (puntoReaparicion != null)
         {
             Vector3 posicion = puntoReaparicion.transform.position;
