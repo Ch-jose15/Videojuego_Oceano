@@ -6,9 +6,11 @@ public class ItemRed : NetworkBehaviour
     public const ulong Nadie = ulong.MaxValue;
 
     private readonly NetworkVariable<ulong> portador = new NetworkVariable<ulong>(Nadie);
+    private readonly NetworkVariable<bool> guardado = new NetworkVariable<bool>(false);
 
     private Rigidbody rb;
     private Collider colisionador;
+    private Renderer[] renderes;
     private Transform manoPortador;
     private bool enMiMano;
 
@@ -18,6 +20,7 @@ public class ItemRed : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody>();
         colisionador = GetComponent<Collider>();
+        renderes = GetComponentsInChildren<Renderer>(true);
     }
 
     /*========================================================================================*/
@@ -25,7 +28,8 @@ public class ItemRed : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         portador.OnValueChanged += AlCambiarPortador;
-        AplicarCollider(portador.Value);
+        guardado.OnValueChanged += AlCambiarGuardado;
+        Refrescar();
         if (IsServer) NetworkManager.OnClientDisconnectCallback += AlDesconectarseCliente;
     }
 
@@ -34,7 +38,9 @@ public class ItemRed : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         portador.OnValueChanged -= AlCambiarPortador;
-        if (IsServer && NetworkManager != null) NetworkManager.OnClientDisconnectCallback -= AlDesconectarseCliente;
+        guardado.OnValueChanged -= AlCambiarGuardado;
+        if (IsServer && NetworkManager != null) 
+            NetworkManager.OnClientDisconnectCallback -= AlDesconectarseCliente;
     }
 
     /*========================================================================================*/
@@ -66,16 +72,54 @@ public class ItemRed : NetworkBehaviour
 
     /*========================================================================================*/
 
-    private void AlCambiarPortador(ulong anterior, ulong actual)
+    [Rpc(SendTo.Server)]
+    public void PedirGuardarRpc(RpcParams parametros = default)
     {
-        AplicarCollider(actual);
+        if (portador.Value != parametros.Receive.SenderClientId) return;
+        guardado.Value = true;
     }
 
     /*========================================================================================*/
 
-    private void AplicarCollider(ulong actual)
+    [Rpc(SendTo.Server)]
+    public void PedirSacarRpc(RpcParams parametros = default)
     {
-        if (colisionador != null) colisionador.enabled = actual == Nadie;
+        if (portador.Value != parametros.Receive.SenderClientId || !guardado.Value) return;
+        guardado.Value = false;
+    }
+
+    /*========================================================================================*/
+
+    [Rpc(SendTo.Server)]
+    public void PedirDestruirRpc(RpcParams parametros = default)
+    {
+        if (portador.Value != parametros.Receive.SenderClientId) return;
+        NetworkObject.Despawn(true);
+    }
+
+    /*========================================================================================*/
+
+    private void AlCambiarPortador(ulong anterior, ulong actual)
+    {
+        Refrescar();
+    }
+
+    /*========================================================================================*/
+
+    private void AlCambiarGuardado(bool anterior, bool actual)
+    {
+        Refrescar();
+    }
+
+    /*========================================================================================*/
+
+    private void Refrescar()
+    {
+        if (colisionador != null)
+            colisionador.enabled = portador.Value == Nadie && !guardado.Value;
+
+        foreach (Renderer r in renderes)
+            if (r != null) r.enabled = !guardado.Value;
     }
 
     /*========================================================================================*/
@@ -83,7 +127,7 @@ public class ItemRed : NetworkBehaviour
     private void Update()
     {
         if (!IsSpawned) return;
-        bool esMio = IsOwner && portador.Value == NetworkManager.LocalClientId;
+        bool esMio = IsOwner && portador.Value == NetworkManager.LocalClientId && !guardado.Value;
         if (esMio && !enMiMano) EntrarEnMiMano();
         else if (!esMio && enMiMano) SalirDeMiMano();
     }
@@ -118,7 +162,7 @@ public class ItemRed : NetworkBehaviour
     {
         enMiMano = false;
         manoPortador = null;
-        if (rb != null && IsOwner)
+        if (rb != null && IsOwner && !guardado.Value)
         {
             rb.isKinematic = false;
             rb.linearVelocity = Vector3.zero;
@@ -137,7 +181,8 @@ public class ItemRed : NetworkBehaviour
 
     private void AlDesconectarseCliente(ulong idcliente)
     {
-        if (portador.Value == idcliente) portador.Value = Nadie;
+        if (portador.Value != idcliente) return;
+        guardado.Value = false;
+        portador.Value = Nadie;
     }
-
 }
