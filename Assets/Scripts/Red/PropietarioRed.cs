@@ -34,6 +34,7 @@ public class PropietarioRed : NetworkBehaviour
 
         OcultarCuerpoPropio();
         ColocarEnReaparicion();
+        ConectarHUD();
 
         SceneManager.sceneLoaded += AlCargarEscena;
     }
@@ -70,6 +71,7 @@ public class PropietarioRed : NetworkBehaviour
     private void AlCargarEscena(Scene escena, LoadSceneMode modo)
     {
         ColocarEnReaparicion();
+        ConectarHUD();
     }
 
     /*========================================================================================*/
@@ -77,5 +79,13 @@ public class PropietarioRed : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         SceneManager.sceneLoaded -= AlCargarEscena;
+    }
+
+    /*========================================================================================*/
+
+    private void ConectarHUD()
+    {
+        HUDJugador hud = FindAnyObjectByType<HUDJugador>();
+        if (hud != null) hud.Conectar(gameObject);
     }
 }

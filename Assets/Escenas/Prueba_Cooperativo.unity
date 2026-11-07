@@ -1986,6 +1986,7 @@ GameObject:
   - component: {fileID: 689085954}
   - component: {fileID: 689085953}
   - component: {fileID: 689085952}
+  - component: {fileID: 689085958}
   m_Layer: 0
   m_Name: CanvasUI
   m_TagString: Untagged
@@ -2123,6 +2124,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &689085958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689085951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1898598b54ce1e142acdd9b9a7c076c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HUDJugador
+  rellenoBarraVida: {fileID: 1387465940}
+  barraVida: {fileID: 466713769}
+  rellenoBarraStamina: {fileID: 1214261615}
+  barraStamina: {fileID: 1528068408}
 --- !u!1001 &709149341
 PrefabInstance:
   m_ObjectHideFlags: 0

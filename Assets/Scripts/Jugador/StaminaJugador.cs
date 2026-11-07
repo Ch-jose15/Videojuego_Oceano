@@ -18,23 +18,27 @@ public class StaminaJugador : MonoBehaviour
     private float anchoInicialBarra;
     private float tiempoUltimoGasto = -999f;
 
-    // Empieza con la stamina llena y guarda los valores iniciales de la barra
+    /*========================================================================================*/
+
     void Awake()
     {
         staminaActual = staminaMaxima;
         ActualizarBarra();
 
         staminaMaximaInicial = staminaMaxima;
-        if (barraStamina != null) anchoInicialBarra = barraStamina.sizeDelta.x;
+        if (barraStamina != null) 
+            anchoInicialBarra = barraStamina.sizeDelta.x;
     }
 
-    // Indica si queda al menos esa cantidad de stamina
+    /*========================================================================================*/
+
     public bool TieneSuficiente(float cantidad)
     {
         return staminaActual >= cantidad;
     }
 
-    // Resta stamina si hay suficiente y apunta el momento del gasto
+    /*========================================================================================*/
+
     public bool Consumir(float cantidad)
     {
         if (!TieneSuficiente(cantidad)) return false;
@@ -45,7 +49,8 @@ public class StaminaJugador : MonoBehaviour
         return true;
     }
 
-    // Recupera stamina con el tiempo una vez pasada la espera tras el último gasto
+    /*========================================================================================*/
+
     public void Regenerar(float tiempo)
     {
         if (staminaActual >= staminaMaxima) return;
@@ -56,20 +61,23 @@ public class StaminaJugador : MonoBehaviour
         ActualizarBarra();
     }
 
-    // Rellena la stamina hasta el máximo actual
+    /*========================================================================================*/
+
     public void RellenarStamina()
     {
         staminaActual = staminaMaxima;
         ActualizarBarra();
     }
 
-    // Devuelve la stamina actual del jugador
+    /*========================================================================================*/
+
     public float ObtenerStamina()
     {
         return staminaActual;
     }
 
-    // Sube la stamina máxima, la rellena y ensancha la barra en proporción
+    /*========================================================================================*/
+
     public void AumentarStaminaMaxima(float cantidad)
     {
         if (cantidad <= 0f) return;
@@ -85,9 +93,30 @@ public class StaminaJugador : MonoBehaviour
         }
     }
 
-    // Ajusta el relleno de la barra a la stamina actual
+    /*========================================================================================*/
+
     private void ActualizarBarra()
     {
-        if (rellenoBarraStamina != null) rellenoBarraStamina.fillAmount = staminaActual / staminaMaxima;
+        if (rellenoBarraStamina != null) 
+            rellenoBarraStamina.fillAmount = staminaActual / staminaMaxima;
+    }
+
+    /*========================================================================================*/
+
+    public void ConectarBarra(Image relleno, RectTransform barra)
+    {
+        if (barra != barraStamina)
+        {
+            barraStamina = barra;
+            if (barraStamina != null)
+            {
+                anchoInicialBarra = barraStamina.sizeDelta.x;
+                float nuevoAncho = anchoInicialBarra * (staminaMaxima / staminaMaximaInicial);
+                barraStamina.sizeDelta = new Vector2(nuevoAncho, barraStamina.sizeDelta.y);
+            }
+        }
+
+        rellenoBarraStamina = relleno;
+        ActualizarBarra();
     }
 }

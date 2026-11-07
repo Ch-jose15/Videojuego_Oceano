@@ -85,4 +85,23 @@ public class VidaJugador : MonoBehaviour
     {
         if (rellenoBarraVida != null) rellenoBarraVida.fillAmount = vidaActual / vidaMaxima;
     }
+
+    /*========================================================================================*/
+
+    public void ConectarBarra(Image relleno, RectTransform barra)
+    {
+        if (barra != barraVida)
+        {
+            barraVida = barra;
+            if (barraVida != null)
+            {
+                anchoInicialBarra = barraVida.sizeDelta.x;
+                float nuevoAncho = anchoInicialBarra * (vidaMaxima / vidaMaximaInicial);
+                barraVida.sizeDelta = new Vector2(nuevoAncho, barraVida.sizeDelta.y);
+            }
+        }
+
+        rellenoBarraVida = relleno;
+        ActualizarBarra();
+    }
 }
