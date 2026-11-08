@@ -1,4 +1,3 @@
-// Cubo de compra: con las manos vacías en su zona, un clic abre el panel de mejoras (vida, stamina, disparo y linterna) y pausa el juego.
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,18 +47,13 @@ public class CuboCompra : MonoBehaviour
     private Transform panelAnimado;
     private float tiempoPop = 0f;
 
-    // Busca las referencias, conecta los botones y oculta la UI de compra
+    /*========================================================================================*/
+
     void Awake()
     {
         rendererCubo = GetComponent<Renderer>();
 
         GetComponent<Collider>().isTrigger = false;
-
-        if (jugador == null) jugador = FindFirstObjectByType<InteracciónAgarrar>();
-        if (jugador != null && vidaJugador == null) vidaJugador = jugador.GetComponent<VidaJugador>();
-        if (jugador != null && staminaJugador == null) staminaJugador = jugador.GetComponent<StaminaJugador>();
-        if (jugador != null && disparoJugador == null) disparoJugador = jugador.GetComponent<DisparoJugador>();
-        if (jugador != null && puntoManoIzquierda == null && jugador.camara != null) puntoManoIzquierda = jugador.camara.Find("PuntoManoIzquierda");
 
         PrepararBoton(botonMejorarVida, "Mejorar Vida - " + costeMejoraVida + "$", ComprarMejoraVida);
         PrepararBoton(botonMejorarStamina, "Mejorar Stamina - " + costeMejoraStamina + "$", ComprarMejoraStamina);
@@ -67,46 +61,47 @@ public class CuboCompra : MonoBehaviour
         PrepararBoton(botonLinterna, "Linterna - " + costeLinterna + "$", ComprarLinterna);
         PrepararBoton(botonCerrar, "Cerrar", CerrarComprar);
 
-        if (botonDesbloquearDisparo != null && disparoJugador != null && disparoJugador.disparoDesbloqueado)
-            botonDesbloquearDisparo.gameObject.SetActive(false);
-
-        if (botonLinterna != null && TieneLinterna()) botonLinterna.gameObject.SetActive(false);
-
         OcultarPanel();
         if (avisoComprar != null) avisoComprar.SetActive(false);
     }
 
-    // Empieza a escuchar la muerte del jugador para cerrar el panel
+    /*========================================================================================*/
+
     void OnEnable()
     {
         MuerteJugador.AlMorirJugador += CerrarSiAbierto;
     }
 
-    // Deja de escuchar la muerte del jugador
+    /*========================================================================================*/
+
     void OnDisable()
     {
         MuerteJugador.AlMorirJugador -= CerrarSiAbierto;
     }
 
-    // Cierra el panel de mejoras solo si está abierto
+    /*========================================================================================*/
+
     private void CerrarSiAbierto()
     {
         if (comprarAbierto) CerrarComprar();
     }
 
-    // Vuelve a mostrar el botón de la linterna para poder comprarla otra vez
+    /*========================================================================================*/
+
     public void VolverAVenderLinterna()
     {
         if (botonLinterna != null) botonLinterna.gameObject.SetActive(true);
     }
 
-    // Vuelve a mostrar el botón de desbloquear disparo para poder comprarlo otra vez
+    /*========================================================================================*/
+
     public void VolverAVenderDisparo()
     {
         if (botonDesbloquearDisparo != null) botonDesbloquearDisparo.gameObject.SetActive(true);
     }
 
-    // Muestra el aviso de compra y abre o cierra el panel según el clic y la tecla de cerrar
+    /*========================================================================================*/
+
     void Update()
     {
         if (jugador == null) return;
@@ -127,15 +122,18 @@ public class CuboCompra : MonoBehaviour
         if (jugadorEnZona && manosVacias && Input.GetMouseButtonDown(0) && !EstadoJuego.RatonLibre) AbrirComprar();
     }
 
-    // Marca que el jugador ha entrado en la zona de compra y resalta el cubo
+    /*========================================================================================*/
+
     public void JugadorEntraEnZona()
     {
+        BuscarJugadorLocal();
         jugadorEnZona = true;
         EstadoJuego.CambiarJugadorEnZonaCompra(true);
         Resaltar();
     }
 
-    // Marca que el jugador ha salido de la zona de compra y quita el resaltado
+    /*========================================================================================*/
+
     public void JugadorSaleDeZona()
     {
         jugadorEnZona = false;
@@ -143,16 +141,42 @@ public class CuboCompra : MonoBehaviour
         QuitarResaltado();
     }
 
-    // Abre el panel de mejoras con animación y pausa el juego
+    /*========================================================================================*/
+
+    private void BuscarJugadorLocal()
+    {
+        jugador = JugadorLocal.Agarrar();
+        if (jugador == null) return;
+
+        vidaJugador = jugador.GetComponent<VidaJugador>();
+        staminaJugador = jugador.GetComponent<StaminaJugador>();
+        disparoJugador = jugador.GetComponent<DisparoJugador>();
+        if (jugador.camara != null) puntoManoIzquierda = jugador.camara.Find("PuntoManoIzquierda");
+    }
+
+    /*========================================================================================*/
+
+    private void ActualizarBotones()
+    {
+        if (botonDesbloquearDisparo != null)
+            botonDesbloquearDisparo.gameObject.SetActive(disparoJugador == null || !disparoJugador.disparoDesbloqueado);
+
+        if (botonLinterna != null) botonLinterna.gameObject.SetActive(!TieneLinterna());
+    }
+
+    /*========================================================================================*/
+
     private void AbrirComprar()
     {
+        ActualizarBotones();
         comprarAbierto = true;
         panelComprar.SetActive(true);
         AnimarPop(panelComprar);
         EstadoJuego.AbrirMenu();
     }
 
-    // Cierra el panel de mejoras y reanuda el juego
+    /*========================================================================================*/
+
     private void CerrarComprar()
     {
         comprarAbierto = false;
@@ -160,7 +184,8 @@ public class CuboCompra : MonoBehaviour
         EstadoJuego.CerrarMenu();
     }
 
-    // Oculta el panel y termina la animación si estaba a medias
+    /*========================================================================================*/
+
     private void OcultarPanel()
     {
         if (panelAnimado != null) panelAnimado.localScale = Vector3.one;
@@ -169,7 +194,8 @@ public class CuboCompra : MonoBehaviour
         if (panelComprar != null) panelComprar.SetActive(false);
     }
 
-    // Empieza la animación de aparición del panel desde escala cero
+    /*========================================================================================*/
+
     private void AnimarPop(GameObject panel)
     {
         panelAnimado = panel.transform;
@@ -177,7 +203,8 @@ public class CuboCompra : MonoBehaviour
         tiempoPop = 0f;
     }
 
-    // Hace crecer el panel con suavizado aunque el juego esté en pausa
+    /*========================================================================================*/
+
     private void ActualizarPop()
     {
         if (panelAnimado == null) return;
@@ -191,7 +218,8 @@ public class CuboCompra : MonoBehaviour
         if (t >= 1f) panelAnimado = null;
     }
 
-    // Pinta el cubo con el color de resaltado
+    /*========================================================================================*/
+
     private void Resaltar()
     {
         if (resaltado || rendererCubo == null) return;
@@ -201,7 +229,8 @@ public class CuboCompra : MonoBehaviour
         resaltado = true;
     }
 
-    // Devuelve al cubo su color original
+    /*========================================================================================*/
+
     private void QuitarResaltado()
     {
         if (!resaltado || rendererCubo == null) return;
@@ -210,7 +239,8 @@ public class CuboCompra : MonoBehaviour
         resaltado = false;
     }
 
-    // Conecta un botón con su función y le pone el texto
+    /*========================================================================================*/
+
     private void PrepararBoton(Button boton, string texto, UnityEngine.Events.UnityAction alPulsar)
     {
         if (boton == null) return;
@@ -222,7 +252,8 @@ public class CuboCompra : MonoBehaviour
         if (textoBoton != null) textoBoton.text = texto;
     }
 
-    // Cobra la mejora de vida y sube la vida máxima del jugador si hay dinero suficiente
+    /*========================================================================================*/
+
     public void ComprarMejoraVida()
     {
         if (vidaJugador == null) return;
@@ -232,7 +263,8 @@ public class CuboCompra : MonoBehaviour
         Debug.Log("Mejora de vida comprada. Vida máxima: " + vidaJugador.vidaMaxima);
     }
 
-    // Cobra la mejora de stamina y sube la stamina máxima del jugador si hay dinero suficiente
+    /*========================================================================================*/
+
     public void ComprarMejoraStamina()
     {
         if (staminaJugador == null) return;
@@ -242,7 +274,8 @@ public class CuboCompra : MonoBehaviour
         Debug.Log("Mejora de stamina comprada. Stamina máxima: " + staminaJugador.staminaMaxima);
     }
 
-    // Cobra y desbloquea el disparo una sola vez, ocultando después su botón
+    /*========================================================================================*/
+
     public void ComprarDesbloquearDisparo()
     {
         if (disparoJugador == null || disparoJugador.disparoDesbloqueado) return;
@@ -253,7 +286,8 @@ public class CuboCompra : MonoBehaviour
         Debug.Log("Disparo desbloqueado");
     }
 
-    // Compra la linterna una sola vez y la coloca de forma permanente en la mano izquierda, ocultando después su botón
+    /*========================================================================================*/
+
     public void ComprarLinterna()
     {
         if (prefabLinterna == null || puntoManoIzquierda == null || TieneLinterna()) return;
@@ -268,7 +302,8 @@ public class CuboCompra : MonoBehaviour
         Debug.Log("Linterna comprada");
     }
 
-    // Indica si el jugador ya tiene la linterna en la mano izquierda
+    /*========================================================================================*/
+
     private bool TieneLinterna()
     {
         return puntoManoIzquierda != null && puntoManoIzquierda.GetComponentInChildren<Linterna>() != null;

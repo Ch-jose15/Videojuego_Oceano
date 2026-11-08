@@ -39,8 +39,13 @@ public class ItemRed : NetworkBehaviour
     {
         portador.OnValueChanged -= AlCambiarPortador;
         guardado.OnValueChanged -= AlCambiarGuardado;
-        if (IsServer && NetworkManager != null) 
-            NetworkManager.OnClientDisconnectCallback -= AlDesconectarseCliente;
+        if (IsServer && NetworkManager != null) NetworkManager.OnClientDisconnectCallback -= AlDesconectarseCliente;
+
+        enMiMano = false;
+        manoPortador = null;
+        if (colisionador != null) colisionador.enabled = false;
+        foreach (Renderer r in renderes)
+            if (r != null) r.enabled = false;
     }
 
     /*========================================================================================*/
@@ -94,7 +99,9 @@ public class ItemRed : NetworkBehaviour
     public void PedirDestruirRpc(RpcParams parametros = default)
     {
         if (portador.Value != parametros.Receive.SenderClientId) return;
-        NetworkObject.Despawn(true);
+        bool colocadoEnEscena = NetworkObject.InScenePlaced == true;
+        NetworkObject.Despawn(!colocadoEnEscena);
+
     }
 
     /*========================================================================================*/

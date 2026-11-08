@@ -1,4 +1,3 @@
-// Cubo de venta: mientras el jugador está en su zona, vende al momento el objeto que lleva en la mano.
 using UnityEngine;
 
 public class CuboVenta : MonoBehaviour
@@ -13,35 +12,39 @@ public class CuboVenta : MonoBehaviour
     private AudioSource fuenteAudio;
     private bool jugadorEnZona = false;
 
-    // Busca al jugador y prepara el AudioSource del sonido de venta
+    /*========================================================================================*/
+
     void Awake()
     {
-        if (jugador == null) jugador = FindFirstObjectByType<InteracciónAgarrar>();
-
         fuenteAudio = GetComponent<AudioSource>();
         if (fuenteAudio == null) fuenteAudio = gameObject.AddComponent<AudioSource>();
         fuenteAudio.playOnAwake = false;
     }
 
-    // Vende el objeto de la mano si el jugador está dentro de la zona
+    /*========================================================================================*/
+
     void Update()
     {
         if (jugadorEnZona && jugador != null && jugador.TieneObjetoAgarrado()) Vender();
     }
 
-    // Marca que el jugador ha entrado en la zona de venta
+    /*========================================================================================*/
+
     public void JugadorEntraEnZona()
     {
+        jugador = JugadorLocal.Agarrar();
         jugadorEnZona = true;
     }
 
-    // Marca que el jugador ha salido de la zona de venta
+    /*========================================================================================*/
+
     public void JugadorSaleDeZona()
     {
         jugadorEnZona = false;
     }
 
-    // Suma el valor del objeto vendido al dinero del jugador, lo destruye y muestra el feedback
+    /*========================================================================================*/
+
     private void Vender()
     {
         GameObject objeto = jugador.QuitarObjetoAgarrado();
@@ -55,13 +58,16 @@ public class CuboVenta : MonoBehaviour
         Dinero.Sumar(valor);
         Debug.Log("Vendido " + objeto.name + " por " + valor + ". Dinero total: " + Dinero.Total);
 
-        Destroy(objeto);
+        ItemRed itemRed = objeto.GetComponent<ItemRed>();
+        if (itemRed != null && itemRed.IsSpawned) itemRed.PedirDestruirRpc();
+        else Destroy(objeto);
 
         MostrarTextoVenta(valor);
         if (sonidoVenta != null) fuenteAudio.PlayOneShot(sonidoVenta);
     }
 
-    // Muestra en pantalla el texto flotante "+X$" con el valor vendido
+    /*========================================================================================*/
+
     private void MostrarTextoVenta(int valor)
     {
         if (plantillaTextoVenta == null) return;
