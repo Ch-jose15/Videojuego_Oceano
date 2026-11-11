@@ -1,4 +1,3 @@
-// Punto de cobro de la deuda: con las manos vacías en su zona, un clic abre el panel para pagar el plazo actual a la mafia de las orcas.
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,10 +33,10 @@ public class PuntoCobro : MonoBehaviour
     private Transform panelAnimado;
     private float tiempoPop = 0f;
 
-    // Busca las referencias, conecta los botones y oculta la UI de cobro
+    /*========================================================================================*/
+
     void Awake()
     {
-        if (jugador == null) jugador = FindFirstObjectByType<InteracciónAgarrar>();
         if (rendererCubo == null) rendererCubo = GetComponentInChildren<Renderer>();
 
         if (botonPagar != null)
@@ -57,26 +56,39 @@ public class PuntoCobro : MonoBehaviour
         if (avisoCobro != null) avisoCobro.SetActive(false);
     }
 
-    // Empieza a escuchar la muerte del jugador para cerrar el panel
+    /*========================================================================================*/
+
     void OnEnable()
     {
         MuerteJugador.AlMorirJugador += CerrarCobro;
+        GestorPlazos.AlCambiarAportado += RefrescarSiAbierto;
     }
 
-    // Deja de escuchar la muerte del jugador
+    /*========================================================================================*/
+
     void OnDisable()
     {
         MuerteJugador.AlMorirJugador -= CerrarCobro;
+        GestorPlazos.AlCambiarAportado -= RefrescarSiAbierto;
     }
 
-    // Busca el gestor de plazos de la escena si no se asignó
+    /*========================================================================================*/
+
+    private void RefrescarSiAbierto()
+    {
+        if (cobroAbierto) ActualizarPanel();
+    }
+
+    /*========================================================================================*/
+
     void Start()
     {
         if (gestorPlazos == null) gestorPlazos = GestorPlazos.Instancia;
         if (gestorPlazos == null) Debug.LogWarning("PuntoCobro: no hay ningún GestorPlazos en la escena.");
     }
 
-    // Muestra el aviso de cobro, abre o cierra el panel y refresca el estado del botón Pagar
+    /*========================================================================================*/
+
     void Update()
     {
         if (jugador == null) return;
@@ -98,17 +110,20 @@ public class PuntoCobro : MonoBehaviour
         if (jugadorEnZona && manosVacias && Input.GetMouseButtonDown(0) && !EstadoJuego.RatonLibre) AbrirCobro();
     }
 
-    // Marca que el jugador ha entrado en la zona de cobro y resalta el cubo
+    /*========================================================================================*/
+
     public void JugadorEntraEnZona()
     {
         if (jugadorEnZona) return;
 
+        jugador = JugadorLocal.Agarrar();
         jugadorEnZona = true;
         EstadoJuego.CambiarJugadorEnZonaCompra(true);
         Resaltar();
     }
 
-    // Marca que el jugador ha salido de la zona de cobro y quita el resaltado
+    /*========================================================================================*/
+
     public void JugadorSaleDeZona()
     {
         if (!jugadorEnZona) return;
@@ -118,7 +133,8 @@ public class PuntoCobro : MonoBehaviour
         QuitarResaltado();
     }
 
-    // Abre el panel de cobro con animación y pausa el juego
+    /*========================================================================================*/
+
     private void AbrirCobro()
     {
         if (panelCobro == null) return;
@@ -130,7 +146,8 @@ public class PuntoCobro : MonoBehaviour
         EstadoJuego.AbrirMenu();
     }
 
-    // Cierra el panel de cobro y reanuda el juego
+    /*========================================================================================*/
+
     private void CerrarCobro()
     {
         if (!cobroAbierto) return;
@@ -140,28 +157,31 @@ public class PuntoCobro : MonoBehaviour
         EstadoJuego.CerrarMenu();
     }
 
-    // Paga el plazo actual mediante el gestor, muestra "-X$" y actualiza el panel con el siguiente plazo
+    /*========================================================================================*/
+
     public void PagarPlazo()
     {
         if (!SePuedePagarAhora()) return;
 
-        int importe = gestorPlazos.ObtenerImportePlazoActual();
-        if (!gestorPlazos.PagarPlazo()) return;
+        int aportado = gestorPlazos.Aportar();
+        if (aportado <= 0) return;
 
         tiempoUltimoPago = Time.unscaledTime;
-        MostrarTextoCobro(importe);
+        MostrarTextoCobro(aportado);
         ActualizarPanel();
     }
 
-    // Indica si ahora mismo se puede pagar: hay dinero, quedan plazos y no se acaba de pagar (evita el doble clic)
+    /*========================================================================================*/
+
     private bool SePuedePagarAhora()
     {
         if (gestorPlazos == null) return false;
         if (Time.unscaledTime - tiempoUltimoPago < esperaTrasPagar) return false;
-        return gestorPlazos.PuedePagar();
+        return gestorPlazos.PuedeAportar();
     }
 
-    // Escribe en el panel el plazo, el importe, el dinero del jugador y lo que falta
+    /*========================================================================================*/
+
     private void ActualizarPanel()
     {
         if (botonPagar != null) botonPagar.interactable = SePuedePagarAhora();
@@ -178,23 +198,24 @@ public class PuntoCobro : MonoBehaviour
 
         if (gestorPlazos.PlazosPagados())
         {
-            if (textoTitulo != null) textoTitulo.text = "<b><size=48>COBRO FINAL</size></b>";
+            if (textoTitulo != null) 
+                textoTitulo.text = "<b><size=48>COBRO FINAL</size></b>";
             info = "Importe: <b>" + importe + "$</b>\nTu dinero: " + Dinero.Total + "$\n<color=#" + colorHex + ">Las orcas no aceptan negociar</color>";
         }
         else
         {
-            if (textoTitulo != null) textoTitulo.text = "<b><size=48>PLAZO " + gestorPlazos.capituloActual + " DE " + gestorPlazos.CantidadPlazos() + "</size></b>";
-            info = "Importe: <b>" + importe + "$</b>\nTu dinero: " + Dinero.Total + "$";
-
-            int falta = importe - Dinero.Total;
-            if (falta > 0) info += "\n<color=#" + colorHex + ">Te faltan " + falta + "$</color>";
-            else info += "\nTienes suficiente para pagar";
+            if (textoTitulo != null) 
+                textoTitulo.text = "<b><size=48>PLAZO " + gestorPlazos.capituloActual + " DE " + gestorPlazos.CantidadPlazos() + "</size></b>";
+            int falta = gestorPlazos.FaltaPlazoActual();
+            info = "Importe: <b>" + importe + "$</b>\nAportado: " + gestorPlazos.aportadoActual + "$\nTu dinero: " + Dinero.Total + "$";
+            info += "\n<color=#" + colorHex + ">Faltan " + falta + "$</color>";
         }
 
         if (textoInfo != null) textoInfo.text = info;
     }
 
-    // Muestra en pantalla el texto flotante "-X$" con lo pagado
+    /*========================================================================================*/
+
     private void MostrarTextoCobro(int importe)
     {
         if (plantillaTextoCobro == null) return;
@@ -205,7 +226,8 @@ public class PuntoCobro : MonoBehaviour
         copia.Mostrar("-" + importe + "$");
     }
 
-    // Oculta el panel y termina la animación si estaba a medias
+    /*========================================================================================*/
+
     private void OcultarPanel()
     {
         if (panelAnimado != null) panelAnimado.localScale = Vector3.one;
@@ -214,7 +236,8 @@ public class PuntoCobro : MonoBehaviour
         if (panelCobro != null) panelCobro.SetActive(false);
     }
 
-    // Empieza la animación de aparición del panel desde escala cero
+    /*========================================================================================*/
+
     private void AnimarPop(GameObject panel)
     {
         panelAnimado = panel.transform;
@@ -222,7 +245,8 @@ public class PuntoCobro : MonoBehaviour
         tiempoPop = 0f;
     }
 
-    // Hace crecer el panel con suavizado aunque el juego esté en pausa
+    /*========================================================================================*/
+
     private void ActualizarPop()
     {
         if (panelAnimado == null) return;
@@ -236,7 +260,8 @@ public class PuntoCobro : MonoBehaviour
         if (t >= 1f) panelAnimado = null;
     }
 
-    // Pinta el cubo con el color de resaltado
+    /*========================================================================================*/
+
     private void Resaltar()
     {
         if (resaltado || rendererCubo == null) return;
@@ -246,7 +271,8 @@ public class PuntoCobro : MonoBehaviour
         resaltado = true;
     }
 
-    // Devuelve al cubo su color original
+    /*========================================================================================*/
+
     private void QuitarResaltado()
     {
         if (!resaltado || rendererCubo == null) return;

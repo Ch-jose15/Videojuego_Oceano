@@ -1,4 +1,3 @@
-// Muestra en el HUD el plazo actual de la deuda y lo que falta, cambiando de color cuando ya se puede pagar.
 using TMPro;
 using UnityEngine;
 
@@ -12,42 +11,50 @@ public class UIPlazo : MonoBehaviour
     public Color colorPuedePagar = new Color(0.3f, 1f, 0.4f);
     public Color colorCobroFinal = new Color(1f, 0.35f, 0.3f);
 
-    // Busca su texto y se suscribe a los cambios de dinero y de capítulo
+    /*========================================================================================*/
+
     void OnEnable()
     {
         if (textoPlazo == null) textoPlazo = GetComponent<TextMeshProUGUI>();
 
         Dinero.AlCambiar += AlCambiarDinero;
         GestorPlazos.AlCambiarCapitulo += AlCambiarCapitulo;
+        GestorPlazos.AlCambiarAportado += Actualizar;
         Actualizar();
     }
 
-    // Deja de escuchar los cambios
+    /*========================================================================================*/
+
     void OnDisable()
     {
         Dinero.AlCambiar -= AlCambiarDinero;
         GestorPlazos.AlCambiarCapitulo -= AlCambiarCapitulo;
+        GestorPlazos.AlCambiarAportado -= Actualizar;
     }
 
-    // Vuelve a escribir el texto cuando el gestor ya está listo
+    /*========================================================================================*/
+
     void Start()
     {
         Actualizar();
     }
 
-    // Refresca el texto cuando cambia el dinero
+    /*========================================================================================*/
+
     private void AlCambiarDinero(int total)
     {
         Actualizar();
     }
 
-    // Refresca el texto cuando cambia el capítulo
+    /*========================================================================================*/
+
     private void AlCambiarCapitulo(int capitulo)
     {
         Actualizar();
     }
 
-    // Escribe el plazo actual, su importe y lo que falta, con el color que corresponda
+    /*========================================================================================*/
+
     private void Actualizar()
     {
         if (textoPlazo == null) return;
@@ -68,16 +75,8 @@ public class UIPlazo : MonoBehaviour
             return;
         }
 
-        int falta = importe - Dinero.Total;
-        if (falta > 0)
-        {
-            textoPlazo.text = "Plazo " + gestor.capituloActual + ": " + importe + "$ (faltan " + falta + "$)";
-            textoPlazo.color = colorNormal;
-        }
-        else
-        {
-            textoPlazo.text = "Plazo " + gestor.capituloActual + ": " + importe + "$ (¡ya puedes pagar!)";
-            textoPlazo.color = colorPuedePagar;
-        }
+        int falta = gestor.FaltaPlazoActual();
+        textoPlazo.text = "Plazo " + gestor.capituloActual + ": " + gestor.aportadoActual + "/" + importe + "$ (faltan " + falta + "$)";
+        textoPlazo.color = Dinero.Total >= falta ? colorPuedePagar : colorNormal;
     }
 }

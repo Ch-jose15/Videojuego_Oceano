@@ -1,4 +1,3 @@
-// Gestor de los plazos de la deuda con la mafia de las orcas: guarda el capítulo actual, cobra los plazos y avisa con eventos cuando cambia el capítulo.
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,15 +8,20 @@ public class GestorPlazos : MonoBehaviour
 
     public static event Action<int> AlCambiarCapitulo;
     public static event Action AlLlegarCobroFinal;
+    public static event Action AlCambiarAportado;
 
     [Header("Progreso")]
     public int capituloActual = 1;
+    public int aportadoActual = 0;
 
     [Header("Importes")]
     public List<int> importesPlazos = new List<int> { 100, 400, 1000, 2500 };
     public int importeCobroFinal = 100000;
 
-    // Se registra como gestor de la escena
+    private GestorPlazosRed red;
+
+    /*========================================================================================*/
+
     void Awake()
     {
         if (Instancia != null && Instancia != this)
@@ -25,74 +29,132 @@ public class GestorPlazos : MonoBehaviour
 
         Instancia = this;
         capituloActual = Mathf.Max(1, capituloActual);
+        red = GetComponent<GestorPlazosRed>();
     }
 
-    // Deja de ser el gestor activo al destruirse
+    /*========================================================================================*/
+
     void OnDestroy()
     {
         if (Instancia == this) Instancia = null;
     }
 
-    // Devuelve el capítulo actual, o 1 si no hay gestor en la escena
+    /*========================================================================================*/
+
     public static int CapituloEnCurso()
     {
         return Instancia != null ? Instancia.capituloActual : 1;
     }
 
-    // Número total de plazos que se pueden pagar
+    /*========================================================================================*/
+
     public int CantidadPlazos()
     {
         return importesPlazos.Count;
     }
 
-    // Indica si ya se pagaron todos los plazos
+    /*========================================================================================*/
+
+
     public bool PlazosPagados()
     {
         return capituloActual > importesPlazos.Count;
     }
 
-    // Devuelve lo que hay que pagar ahora: el plazo del capítulo actual o el cobro final
+    /*========================================================================================*/
+
+
     public int ObtenerImportePlazoActual()
     {
         if (PlazosPagados()) return importeCobroFinal;
         return importesPlazos[capituloActual - 1];
     }
 
-    // Indica si el jugador tiene dinero suficiente y aún quedan plazos por pagar
-    public bool PuedePagar()
+    /*========================================================================================*/
+
+    public int FaltaPlazoActual()
     {
-        return !PlazosPagados() && Dinero.Total >= ObtenerImportePlazoActual();
+        if (PlazosPagados()) return importeCobroFinal;
+        return Mathf.Max(0, ObtenerImportePlazoActual() - aportadoActual);
     }
 
-    // Cobra el plazo actual, sube de capítulo y avisa a los demás sistemas; devuelve false si no se pudo pagar
-    public bool PagarPlazo()
+    /*========================================================================================*/
+
+    public bool PuedeAportar()
     {
-        if (!PuedePagar()) return false;
+        return !PlazosPagados() && Dinero.Total > 0;
+    }
 
-        int importe = ObtenerImportePlazoActual();
-        if (!Dinero.Gastar(importe)) return false;
+    /*========================================================================================*/
 
-        capituloActual++;
-        Debug.Log("Plazo de " + importe + "$ pagado. Capítulo actual: " + capituloActual);
+    public int Aportar()
+    {
+        if (!PuedeAportar()) return 0;
+
+        int cantidad = Mathf.Min(Dinero.Total, FaltaPlazoActual());
+        if (cantidad <= 0 || !Dinero.Gastar(cantidad)) return 0;
+
+        if (red != null && red.IsSpawned) red.EnviarAportacion(cantidad);
+        else RegistrarAportacion(cantidad);
+
+        return cantidad;
+    }
+
+    /*========================================================================================*/
+
+    public int RegistrarAportacion(int cantidad)
+    {
+        if (cantidad <= 0 || PlazosPagados()) return Mathf.Max(0, cantidad);
+
+        int aceptada = Mathf.Min(cantidad, FaltaPlazoActual());
+        aportadoActual += aceptada;
+
+        if (aportadoActual >= ObtenerImportePlazoActual())
+        {
+            Debug.Log("Plazo de " + ObtenerImportePlazoActual() + "$ completado. Capítulo actual: " + (capituloActual + 1));
+            aportadoActual = 0;
+            CambiarCapitulo(capituloActual + 1);
+        }
+
+        AlCambiarAportado?.Invoke();
+        return cantidad - aceptada;
+    }
+
+    /*========================================================================================*/
+
+    public void AplicarEstadoRed(int capitulo, int aportado)
+    {
+        aportadoActual = aportado;
+        if (capitulo != capituloActual) CambiarCapitulo(capitulo);
+        AlCambiarAportado?.Invoke();
+    }
+
+    /*========================================================================================*/
+
+    private void CambiarCapitulo(int nuevoCapitulo)
+    {
+        capituloActual = nuevoCapitulo;
         AlCambiarCapitulo?.Invoke(capituloActual);
 
         if (PlazosPagados()) LlegarCobroFinal();
-        return true;
     }
 
-    // Se llama al pagar el último plazo; de momento solo avisa por consola y lanza el evento para el final del juego
+    /*========================================================================================*/
+
     private void LlegarCobroFinal()
     {
         Debug.Log("Todos los plazos pagados. Llega el cobro final de " + importeCobroFinal + "$.");
         AlLlegarCobroFinal?.Invoke();
     }
 
-    // Limpia los eventos cada vez que se pulsa Play en el editor
+    /*========================================================================================*/
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Reiniciar()
     {
         Instancia = null;
         AlCambiarCapitulo = null;
         AlLlegarCobroFinal = null;
+        AlCambiarAportado = null;
     }
 }
