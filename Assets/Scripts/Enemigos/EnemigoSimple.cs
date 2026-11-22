@@ -1,4 +1,4 @@
-// Enemigo marino: deambula, persigue al jugador si se acerca, le hace daño al tocarlo y muere cuando se queda sin vida.
+// Enemigo marino: deambula, persigue al jugador más cercano, le hace daño al tocarlo y muere sin vida. En red solo piensa el host y EnemigoRed lo sincroniza.
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -16,6 +16,7 @@ public class EnemigoSimple : MonoBehaviour
 
     [Header("Detección")]
     public float radioDeteccion = 5f;
+    public float intervaloBuscarJugador = 0.25f;
     public float radioPerderJugador = 8f;
 
     [Header("Ataque")]
@@ -37,18 +38,57 @@ public class EnemigoSimple : MonoBehaviour
     private bool persiguiendo = false;
     private float tiempoProximoGolpe = 0f;
     private bool muerto = false;
+    private EnemigoRed red;
+    private float tiempoProximaBusqueda = 0f;
 
-    // Configura el Rigidbody, busca al jugador y empieza con la vida llena
+    // Configura el Rigidbody y empieza con la vida llena
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
         rb.linearDamping = dragAgua;
 
-        if (vidaJugador == null) vidaJugador = FindFirstObjectByType<VidaJugador>();
+        red = GetComponent<EnemigoRed>();
         if (vidaJugador != null) jugador = vidaJugador.transform;
 
         vidaActual = vidaMaxima;
+    }
+
+    // En red, solo el host mueve y decide; los clientes solo ven lo que les llega
+    private bool PuedePensar()
+    {
+        return red == null || !red.IsSpawned || red.IsServer;
+    }
+
+    // Busca al jugador vivo más cercano (en solitario solo hay uno)
+    private void BuscarJugadorCercano()
+    {
+        if (Time.time < tiempoProximaBusqueda) return;
+        tiempoProximaBusqueda = Time.time + intervaloBuscarJugador;
+
+        VidaJugador masCercano = null;
+        float mejorDistancia = float.MaxValue;
+
+        foreach (VidaJugador vida in FindObjectsByType<VidaJugador>(FindObjectsSortMode.None))
+        {
+            float distancia = Vector3.Distance(transform.position, vida.transform.position);
+            if (distancia < mejorDistancia)
+            {
+                mejorDistancia = distancia;
+                masCercano = vida;
+            }
+        }
+
+        vidaJugador = masCercano;
+        jugador = masCercano != null ? masCercano.transform : null;
+    }
+
+    // Hace daño al jugador: en red se lo manda a su dueño, en solitario se lo resta directamente
+    private void GolpearJugador()
+    {
+        CombateRed combate = vidaJugador.GetComponent<CombateRed>();
+        if (combate != null && combate.IsSpawned) combate.AplicarDaño(dañoPorGolpe);
+        else vidaJugador.RecibirDaño(dañoPorGolpe);
     }
 
     // Guarda el punto de aparición y elige el primer destino
@@ -79,10 +119,14 @@ public class EnemigoSimple : MonoBehaviour
         ElegirNuevoDestino();
     }
 
-    // Decide si persigue o deja de perseguir al jugador y le golpea si está cerca
+    // Decide si persigue o deja de perseguir al jugador más cercano y le golpea si está cerca
     void Update()
     {
-        if (jugador == null || EstadoJuego.MenuAbierto || EstadoJuego.JugadorMuerto || muerto) return;
+        if (muerto || !PuedePensar()) return;
+        if (!JugadorLocal.EnRed() && (EstadoJuego.MenuAbierto || EstadoJuego.JugadorMuerto)) return;
+
+        if (!persiguiendo || jugador == null) BuscarJugadorCercano();
+        if (jugador == null) return;
 
         float distancia = Vector3.Distance(transform.position, jugador.position);
 
@@ -98,7 +142,7 @@ public class EnemigoSimple : MonoBehaviour
 
         if (distancia <= distanciaAtaque && Time.time >= tiempoProximoGolpe)
         {
-            vidaJugador.RecibirDaño(dañoPorGolpe);
+            GolpearJugador();
             tiempoProximoGolpe = Time.time + cooldownGolpe;
         }
     }
@@ -106,9 +150,9 @@ public class EnemigoSimple : MonoBehaviour
     // Mueve al enemigo persiguiendo o deambulando en cada paso de física
     void FixedUpdate()
     {
-        if (muerto) return;
+        if (muerto || !PuedePensar()) return;
 
-        if (persiguiendo) Perseguir();
+        if (persiguiendo && jugador != null) Perseguir();
         else Deambular();
     }
 
@@ -144,27 +188,40 @@ public class EnemigoSimple : MonoBehaviour
         rb.AddForce(direccion * velocidad * dragAgua, ForceMode.Acceleration);
     }
 
-    // Resta vida al enemigo y lo mata si llega a cero
+    // Resta vida al enemigo y lo mata si llega a cero; en red, el cliente se lo pide al host
     public void RecibirDaño(float cantidad)
     {
         if (cantidad <= 0f || muerto) return;
+
+        if (!PuedePensar())
+        {
+            red.PedirDañoRpc(cantidad);
+            return;
+        }
 
         vidaActual = Mathf.Clamp(vidaActual - cantidad, 0f, vidaMaxima);
         if (vidaActual <= 0f) Morir();
     }
 
-    // Para al enemigo, lo pinta de colorAlMorir y lo destruye tras un instante
+    // Mata al enemigo y lo elimina tras un instante (en red lo retira el host para todos)
     private void Morir()
+    {
+        MostrarMuerte();
+
+        if (red != null && red.IsSpawned) red.MarcarMuerto(duracionMuerte);
+        else Destroy(gameObject, duracionMuerte);
+    }
+
+    // Para al enemigo, le quita el collider y lo pinta de colorAlMorir
+    public void MostrarMuerte()
     {
         muerto = true;
 
-        rb.linearVelocity = Vector3.zero;
+        if (!rb.isKinematic) rb.linearVelocity = Vector3.zero;
         GetComponent<Collider>().enabled = false;
 
         Renderer rend = GetComponent<Renderer>();
         if (rend != null) rend.material.color = colorAlMorir;
-
-        Destroy(gameObject, duracionMuerte);
     }
 
     // Corrige en el Inspector la distancia de perder al jugador para que sea mayor que la de detección

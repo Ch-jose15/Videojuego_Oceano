@@ -83,6 +83,25 @@ public class DisparoJugador : MonoBehaviour
         }
 
         proyectil.Lanzar(direccion * velocidadProyectil, dañoProyectil, tiempoVidaProyectil);
+
+        CombateRed combate = GetComponent<CombateRed>();
+        if (combate != null && combate.IsSpawned) combate.AvisarDisparo(posicion, direccion);
+    }
+
+    // Crea un proyectil sin daño solo para que se vea el disparo del compañero
+    public void DispararVisual(Vector3 posicion, Vector3 direccion)
+    {
+        if (prefabProyectil == null) return;
+
+        Proyectil proyectil = Instantiate(prefabProyectil, posicion, Quaternion.LookRotation(direccion));
+
+        Collider colliderProyectil = proyectil.GetComponent<Collider>();
+        foreach (Collider c in GetComponentsInChildren<Collider>())
+        {
+            if (c != null) Physics.IgnoreCollision(colliderProyectil, c);
+        }
+
+        proyectil.Lanzar(direccion * velocidadProyectil, 0f, tiempoVidaProyectil);
     }
 
     // Devuelve el punto del mundo que hay en el centro de la vista, o uno lejano si no se mira nada

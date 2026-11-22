@@ -55,6 +55,7 @@ GameObject:
   - component: {fileID: 5976873393089377023}
   - component: {fileID: 3047175710218790477}
   - component: {fileID: 2464625500389081242}
+  - component: {fileID: 6051080696117577461}
   m_Layer: 0
   m_Name: JugadorRed
   m_TagString: Untagged
@@ -443,6 +444,19 @@ MonoBehaviour:
   - {fileID: 2329847742425554237}
   cuerpo: {fileID: 1209077965411905612}
   separacionEntreJugadores: 2
+--- !u!114 &6051080696117577461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5380675953824233985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c554f67baa3e2943b55dfec66677419, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombateRed
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &5642479805025459280
 GameObject:
   m_ObjectHideFlags: 0
