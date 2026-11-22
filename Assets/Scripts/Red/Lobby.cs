@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using TMPro;
 using Unity.Netcode;
@@ -10,48 +8,41 @@ using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Lobby: partida por IP en red local o por código online con Relay
+// Lobby: partida en solitario o cooperativo online con código (Relay de Unity)
 public class Lobby : MonoBehaviour
 {
-    public TMP_InputField campoIP;
     public TMP_InputField campoCodigo;
     public TMP_Text textoEstado;
     public string escenaJuego = "Prueba_Cooperativo";
-    public string ipPorDefecto = "127.0.0.1";
     public ushort puerto = 7777;
 
-    bool serviciosListos;
+    static bool serviciosListos;
 
-    // Muestra la IP de este PC y rellena el campo con la última IP usada
+    // Limpia el texto de estado y escucha si la conexión se corta
     void Start()
     {
-        textoEstado.text = "Tu IP: " + ObtenerIPLocal();
-        campoIP.text = PlayerPrefs.GetString("UltimaIP", ipPorDefecto);
-        NetworkManager.Singleton.OnClientDisconnectCallback += AlDesconectar;
+        if (textoEstado != null) textoEstado.text = "";
+        if (NetworkManager.Singleton != null) NetworkManager.Singleton.OnClientDisconnectCallback += AlDesconectar;
     }
 
-    // Crea la partida en red local y lleva a todos a la escena de juego
-    public void IniciarHost()
+    // Deja de escuchar la red al salir del Lobby
+    void OnDestroy()
+    {
+        if (NetworkManager.Singleton == null) return;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= AlDesconectar;
+        NetworkManager.Singleton.OnClientConnectedCallback -= AlConectarseJugador;
+    }
+
+    // Partida en solitario: solo escucha en este ordenador, así que nadie puede unirse
+    public void JugarSolo()
     {
         UnityTransport transporte = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transporte.SetConnectionData("0.0.0.0", puerto);
+        transporte.SetConnectionData("127.0.0.1", puerto);
 
         if (NetworkManager.Singleton.StartHost())
             NetworkManager.Singleton.SceneManager.LoadScene(escenaJuego, LoadSceneMode.Single);
         else
-            textoEstado.text = "No se pudo crear la partida";
-    }
-
-    // Se conecta por IP en red local
-    public void IniciarCliente()
-    {
-        UnityTransport transporte = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        string ip = string.IsNullOrWhiteSpace(campoIP.text) ? ipPorDefecto : campoIP.text.Trim();
-        PlayerPrefs.SetString("UltimaIP", ip);
-        transporte.SetConnectionData(ip, puerto);
-
-        textoEstado.text = "Conectando a " + ip + "...";
-        NetworkManager.Singleton.StartClient();
+            Escribir("No se pudo crear la partida");
     }
 
     // Inicia los servicios de Unity e inicia sesión anónima, una sola vez
@@ -74,19 +65,19 @@ public class Lobby : MonoBehaviour
     {
         try
         {
-            textoEstado.text = "Creando partida online...";
+            Escribir("Creando partida online...");
             await PrepararServicios();
 
             SessionOptions opciones = new SessionOptions { MaxPlayers = 2 }.WithRelayNetwork();
             ISession sesion = await MultiplayerService.Instance.CreateSessionAsync(opciones);
 
             GUIUtility.systemCopyBuffer = sesion.Code;
-            textoEstado.text = "Código: " + sesion.Code + " (copiado)\nEsperando al otro jugador...";
+            Escribir("Código: " + sesion.Code + " (copiado)\nEsperando al otro jugador...");
             NetworkManager.Singleton.OnClientConnectedCallback += AlConectarseJugador;
         }
         catch (System.Exception e)
         {
-            textoEstado.text = "Error al crear: " + e.Message;
+            Escribir("Error al crear: " + e.Message);
             Debug.LogException(e);
         }
     }
@@ -94,23 +85,23 @@ public class Lobby : MonoBehaviour
     // Se une a una partida online con el código del host
     public async void UnirseConCodigo()
     {
-        string codigo = campoCodigo.text.Trim().ToUpper();
+        string codigo = campoCodigo != null ? campoCodigo.text.Trim().ToUpper() : "";
         if (string.IsNullOrEmpty(codigo))
         {
-            textoEstado.text = "Escribe un código";
+            Escribir("Escribe un código");
             return;
         }
 
         try
         {
-            textoEstado.text = "Uniéndose a " + codigo + "...";
+            Escribir("Uniéndose a " + codigo + "...");
             await PrepararServicios();
             await MultiplayerService.Instance.JoinSessionByCodeAsync(codigo);
-            textoEstado.text = "Conectado. Esperando al host...";
+            Escribir("Conectado. Esperando al host...");
         }
         catch (System.Exception e)
         {
-            textoEstado.text = "Error al unirse: " + e.Message;
+            Escribir("Error al unirse: " + e.Message);
             Debug.LogException(e);
         }
     }
@@ -128,18 +119,12 @@ public class Lobby : MonoBehaviour
     // Avisa si la conexión falla o se corta
     void AlDesconectar(ulong idCliente)
     {
-        if (textoEstado != null)
-            textoEstado.text = "Conexión fallida o cerrada";
+        Escribir("Conexión fallida o cerrada");
     }
 
-    // Busca la IP de este PC en la red local
-    string ObtenerIPLocal()
+    // Escribe un mensaje en el texto de estado, si existe
+    void Escribir(string mensaje)
     {
-        foreach (IPAddress ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
-        {
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-                return ip.ToString();
-        }
-        return "desconocida";
+        if (textoEstado != null) textoEstado.text = mensaje;
     }
 }

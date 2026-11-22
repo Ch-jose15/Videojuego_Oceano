@@ -56,6 +56,7 @@ GameObject:
   - component: {fileID: 3047175710218790477}
   - component: {fileID: 2464625500389081242}
   - component: {fileID: 6051080696117577461}
+  - component: {fileID: 4215362736558269507}
   m_Layer: 0
   m_Name: JugadorRed
   m_TagString: Untagged
@@ -323,10 +324,14 @@ MonoBehaviour:
   cuboCompra: {fileID: 0}
   puntoReaparicion: {fileID: 0}
   pantallaMuerte: {fileID: 0}
-  porcentajeDineroPerdido: 100
+  porcentajeDineroPerdido: 50
+  pierdeNivelMejoras: 1
   pierdeLinterna: 1
   pierdeObjetos: 1
   pierdeDisparo: 0
+  gameOverSinTarjeta: 1
+  tarjetasCompradas: 0
+  tarjetasGuardadas: 0
   duracionFundido: 1.5
   tiempoEnNegro: 2
   teclaMorir: 107
@@ -457,6 +462,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombateRed
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &4215362736558269507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5380675953824233985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee71941a8526c5041bb43c483bf15c45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EstadoJugadorRed
+  ShowTopMostFoldoutHeaderGroup: 1
+  prefabLinterna: {fileID: 1776317008261723942, guid: 20a81ae69173f6e4dbf65b85c0c1a70c, type: 3}
+  puntoManoIzquierda: {fileID: 0}
+  distanciaEspectador: 4
+  alturaEspectador: 1.5
+  suavizadoEspectador: 5
+  esperaGameOver: 4
+  escenaLobby: Lobby
 --- !u!1 &5642479805025459280
 GameObject:
   m_ObjectHideFlags: 0

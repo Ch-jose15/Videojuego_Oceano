@@ -30,6 +30,10 @@ public class CuboCompra : MonoBehaviour
     public Linterna prefabLinterna;
     public Transform puntoManoIzquierda;
 
+    [Header("Tarjeta de revivir")]
+    public Button botonTarjeta;
+    public int[] costesTarjeta = { 100, 200, 400 };
+
     [Header("Teclas")]
     public KeyCode teclaCerrar = KeyCode.Escape;
 
@@ -46,6 +50,7 @@ public class CuboCompra : MonoBehaviour
     private bool jugadorEnZona = false;
     private Transform panelAnimado;
     private float tiempoPop = 0f;
+    private MuerteJugador muerteJugador;
 
     /*========================================================================================*/
 
@@ -59,6 +64,7 @@ public class CuboCompra : MonoBehaviour
         PrepararBoton(botonMejorarStamina, "Mejorar Stamina - " + costeMejoraStamina + "$", ComprarMejoraStamina);
         PrepararBoton(botonDesbloquearDisparo, "Desbloquear Disparo - " + costeDesbloquearDisparo + "$", ComprarDesbloquearDisparo);
         PrepararBoton(botonLinterna, "Linterna - " + costeLinterna + "$", ComprarLinterna);
+        PrepararBoton(botonTarjeta, "Tarjeta de revivir", ComprarTarjeta);
         PrepararBoton(botonCerrar, "Cerrar", CerrarComprar);
 
         OcultarPanel();
@@ -113,6 +119,7 @@ public class CuboCompra : MonoBehaviour
 
         if (comprarAbierto)
         {
+            ActualizarBotonTarjeta();
             if (Input.GetKeyDown(teclaCerrar)) CerrarComprar();
             return;
         }
@@ -151,6 +158,7 @@ public class CuboCompra : MonoBehaviour
         vidaJugador = jugador.GetComponent<VidaJugador>();
         staminaJugador = jugador.GetComponent<StaminaJugador>();
         disparoJugador = jugador.GetComponent<DisparoJugador>();
+        muerteJugador = jugador.GetComponent<MuerteJugador>();
         if (jugador.camara != null) puntoManoIzquierda = jugador.camara.Find("PuntoManoIzquierda");
     }
 
@@ -162,6 +170,69 @@ public class CuboCompra : MonoBehaviour
             botonDesbloquearDisparo.gameObject.SetActive(disparoJugador == null || !disparoJugador.disparoDesbloqueado);
 
         if (botonLinterna != null) botonLinterna.gameObject.SetActive(!TieneLinterna());
+        ActualizarBotonTarjeta();
+    }
+
+    /*========================================================================================*/
+
+    private void ActualizarBotonTarjeta()
+    {
+        if (botonTarjeta == null) return;
+
+        int compradas = muerteJugador != null ? muerteJugador.tarjetasCompradas : 0;
+        bool cooperativo = EstadoJugadorRed.HayCompañero();
+        bool compañeroCaido = EstadoJugadorRed.CompañeroCaido() != null;
+
+        string texto;
+        bool activo;
+        if (compradas >= costesTarjeta.Length)
+        {
+            texto = "Tarjeta de revivir - Agotadas";
+            activo = false;
+        }
+        else if (cooperativo && !compañeroCaido)
+        {
+            texto = "Tarjeta de revivir - " + costesTarjeta[compradas] + "$ (tu compañero está vivo)";
+            activo = false;
+        }
+        else if (cooperativo)
+        {
+            texto = "Revivir a tu compañero - " + costesTarjeta[compradas] + "$";
+            activo = true;
+        }
+        else
+        {
+            int guardadas = muerteJugador != null ? muerteJugador.tarjetasGuardadas : 0;
+            texto = "Tarjeta de revivir - " + costesTarjeta[compradas] + "$ (tienes " + guardadas + ")";
+            activo = true;
+        }
+
+        TextMeshProUGUI textoBoton = botonTarjeta.GetComponentInChildren<TextMeshProUGUI>();
+        if (textoBoton != null) textoBoton.text = texto;
+        botonTarjeta.interactable = activo;
+    }
+
+    /*========================================================================================*/
+
+    public void ComprarTarjeta()
+    {
+        if (muerteJugador == null) return;
+
+        int compradas = muerteJugador.tarjetasCompradas;
+        if (compradas >= costesTarjeta.Length) return;
+
+        bool cooperativo = EstadoJugadorRed.HayCompañero();
+        EstadoJugadorRed compañero = EstadoJugadorRed.CompañeroCaido();
+        if (cooperativo && compañero == null) return;
+
+        if (!Dinero.Gastar(costesTarjeta[compradas])) return;
+
+        muerteJugador.tarjetasCompradas++;
+        if (cooperativo) compañero.PedirRevivir();
+        else muerteJugador.tarjetasGuardadas++;
+
+        ActualizarBotonTarjeta();
+        Debug.Log(cooperativo ? "Tarjeta comprada: tu compañero revive" : "Tarjeta de revivir guardada");
     }
 
     /*========================================================================================*/

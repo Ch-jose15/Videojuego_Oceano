@@ -27,9 +27,9 @@ public static class Dinero
         return true;
     }
 
-    // Pone el dinero a cero cada vez que se pulsa Play en el editor
+    // Pone el dinero a cero cada vez que se pulsa Play en el editor y al empezar desde cero tras un Game Over
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void Reiniciar()
+    public static void Reiniciar()
     {
         Total = 0;
         AlCambiar = null;

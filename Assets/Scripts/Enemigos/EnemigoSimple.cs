@@ -71,6 +71,8 @@ public class EnemigoSimple : MonoBehaviour
 
         foreach (VidaJugador vida in FindObjectsByType<VidaJugador>(FindObjectsSortMode.None))
         {
+            if (EstadoJugadorRed.JugadorCaido(vida)) continue;
+
             float distancia = Vector3.Distance(transform.position, vida.transform.position);
             if (distancia < mejorDistancia)
             {
@@ -124,6 +126,13 @@ public class EnemigoSimple : MonoBehaviour
     {
         if (muerto || !PuedePensar()) return;
         if (!JugadorLocal.EnRed() && (EstadoJuego.MenuAbierto || EstadoJuego.JugadorMuerto)) return;
+
+        if (jugador != null && EstadoJugadorRed.JugadorCaido(vidaJugador))
+        {
+            persiguiendo = false;
+            jugador = null;
+            vidaJugador = null;
+        }
 
         if (!persiguiendo || jugador == null) BuscarJugadorCercano();
         if (jugador == null) return;

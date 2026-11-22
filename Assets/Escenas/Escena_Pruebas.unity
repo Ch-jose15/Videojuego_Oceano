@@ -13386,7 +13386,8 @@ MonoBehaviour:
   cuboCompra: {fileID: 0}
   puntoReaparicion: {fileID: 0}
   pantallaMuerte: {fileID: 0}
-  porcentajeDineroPerdido: 100
+  porcentajeDineroPerdido: 50
+  pierdeNivelMejoras: 1
   pierdeLinterna: 1
   pierdeObjetos: 1
   pierdeDisparo: 0

@@ -105,7 +105,7 @@ public static class EstadoJuego
     /*========================================================================================*/
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void Reiniciar()
+    public static void Reiniciar()
     {
         MenuAbierto = false;
         JugadorMuerto = false;

@@ -25,6 +25,11 @@ public class MuerteJugador : MonoBehaviour
     public bool pierdeObjetos = true;
     public bool pierdeDisparo = false;
 
+    [Header("Tarjetas de revivir")]
+    public bool gameOverSinTarjeta = true;
+    public int tarjetasCompradas = 0;
+    public int tarjetasGuardadas = 0;
+
     [Header("Fundido (en segundos)")]
     public float duracionFundido = 1.5f;
     public float tiempoEnNegro = 2f;
@@ -62,7 +67,7 @@ public class MuerteJugador : MonoBehaviour
     {
         if (!Application.isEditor || teclaMorir == KeyCode.None || vida == null) return;
 
-        if (Input.GetKeyDown(teclaMorir) && !EstadoJuego.ControlesBloqueados) 
+        if (Input.GetKeyDown(teclaMorir) && !EstadoJuego.ControlesBloqueados)
             vida.RecibirDaño(vida.vidaMaxima * 10f);
     }
 
@@ -92,22 +97,45 @@ public class MuerteJugador : MonoBehaviour
         BuscarReferenciasEscena();
         if (vida != null) vida.invulnerable = true;
 
-        if (inventario != null && inventario.uiInventario != null) 
+        if (inventario != null && inventario.uiInventario != null)
             inventario.uiInventario.Cerrar();
         AlMorirJugador?.Invoke();
         EstadoJuego.CambiarJugadorMuerto(true);
 
-        if (pantallaMuerte != null) 
+        if (pantallaMuerte != null)
             yield return pantallaMuerte.FundirANegro(duracionFundido);
 
         string perdidas = AplicarPenalizacion();
-        Reaparecer();
 
-        if (pantallaMuerte != null)
+        EstadoJugadorRed estadoRed = GetComponent<EstadoJugadorRed>();
+        bool cooperativo = estadoRed != null && estadoRed.IsSpawned && EstadoJugadorRed.HayCompañero();
+
+        if (cooperativo)
         {
-            pantallaMuerte.MostrarMensaje(perdidas);
-            yield return new WaitForSecondsRealtime(tiempoEnNegro);
-            yield return pantallaMuerte.FundirDeVuelta(duracionFundido);
+            yield return EsperarRevivir(estadoRed, perdidas);
+        }
+        else
+        {
+            if (gameOverSinTarjeta && tarjetasGuardadas <= 0)
+            {
+                FinPartida.Lanzar(4f, "Lobby");
+                yield break;
+            }
+
+            if (gameOverSinTarjeta)
+            {
+                tarjetasGuardadas--;
+                perdidas += "\nHas gastado una tarjeta de revivir (te quedan " + tarjetasGuardadas + ")";
+            }
+
+            Reaparecer();
+
+            if (pantallaMuerte != null)
+            {
+                pantallaMuerte.MostrarMensaje(perdidas);
+                yield return new WaitForSecondsRealtime(tiempoEnNegro);
+                yield return pantallaMuerte.FundirDeVuelta(duracionFundido);
+            }
         }
 
         EstadoJuego.CambiarJugadorMuerto(false);
@@ -117,12 +145,53 @@ public class MuerteJugador : MonoBehaviour
 
     /*----------------------------------------------------------------------------*/
 
+    private IEnumerator EsperarRevivir(EstadoJugadorRed estadoRed, string perdidas)
+    {
+        estadoRed.MarcarCaido(true);
+
+        if (pantallaMuerte != null)
+        {
+            pantallaMuerte.MostrarMensaje(perdidas);
+            yield return new WaitForSecondsRealtime(tiempoEnNegro);
+        }
+
+        estadoRed.EntrarEspectador();
+
+        if (pantallaMuerte != null)
+        {
+            pantallaMuerte.MostrarAvisoEspectador(true, "Observando a tu compañero...\nPara volver, tiene que comprarte una tarjeta de revivir en la tienda");
+            yield return pantallaMuerte.FundirDeVuelta(duracionFundido);
+        }
+
+        while (!estadoRed.Revivido) yield return null;
+        estadoRed.LimpiarRevivido();
+
+        if (pantallaMuerte != null)
+        {
+            pantallaMuerte.MostrarAvisoEspectador(false, "");
+            yield return pantallaMuerte.FundirANegro(duracionFundido);
+        }
+
+        estadoRed.SalirEspectador();
+        estadoRed.MarcarCaido(false);
+        Reaparecer();
+
+        if (pantallaMuerte != null)
+        {
+            pantallaMuerte.MostrarTitulo("¡Te han revivido!", "");
+            yield return new WaitForSecondsRealtime(1f);
+            yield return pantallaMuerte.FundirDeVuelta(duracionFundido);
+        }
+    }
+
+    /*----------------------------------------------------------------------------*/
+
     private string AplicarPenalizacion()
     {
         List<string> perdido = new List<string>();
 
         int dineroPerdido = Mathf.FloorToInt(Dinero.Total * porcentajeDineroPerdido / 100f);
-        if (dineroPerdido > 0 && Dinero.Gastar(dineroPerdido)) 
+        if (dineroPerdido > 0 && Dinero.Gastar(dineroPerdido))
             perdido.Add(dineroPerdido + "$");
 
         if (pierdeNivelMejoras)
