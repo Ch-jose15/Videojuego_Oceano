@@ -119,4 +119,22 @@ public class StaminaJugador : MonoBehaviour
         rellenoBarraStamina = relleno;
         ActualizarBarra();
     }
+
+    /*----------------------------------------------------------------------------*/
+
+    public bool ReducirStaminaMaxima(float cantidad)
+    {
+        if (cantidad <= 0f || staminaMaxima <= staminaMaximaInicial) return false;
+
+        staminaMaxima = Mathf.Max(staminaMaximaInicial, staminaMaxima - cantidad);
+        staminaActual = Mathf.Min(staminaActual, staminaMaxima);
+        ActualizarBarra();
+
+        if (barraStamina != null)
+        {
+            float nuevoAncho = anchoInicialBarra * (staminaMaxima / staminaMaximaInicial);
+            barraStamina.sizeDelta = new Vector2(nuevoAncho, barraStamina.sizeDelta.y);
+        }
+        return true;
+    }
 }

@@ -104,4 +104,22 @@ public class VidaJugador : MonoBehaviour
         rellenoBarraVida = relleno;
         ActualizarBarra();
     }
+
+    /*----------------------------------------------------------------------------*/
+
+    public bool ReducirVidaMaxima(float cantidad)
+    {
+        if (cantidad <= 0f || vidaMaxima <= vidaMaximaInicial) return false;
+
+        vidaMaxima = Mathf.Max(vidaMaximaInicial, vidaMaxima - cantidad);
+        vidaActual = Mathf.Min(vidaActual, vidaMaxima);
+        ActualizarBarra();
+
+        if (barraVida != null)
+        {
+            float nuevoAncho = anchoInicialBarra * (vidaMaxima / vidaMaximaInicial);
+            barraVida.sizeDelta = new Vector2(nuevoAncho, barraVida.sizeDelta.y);
+        }
+        return true;
+    }
 }
