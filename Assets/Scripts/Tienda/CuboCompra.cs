@@ -32,7 +32,7 @@ public class CuboCompra : MonoBehaviour
 
     [Header("Tarjeta de revivir")]
     public Button botonTarjeta;
-    public int[] costesTarjeta = { 100, 200, 400 };
+    public int[] costesTarjeta = { 10, 20, 40 };
 
     [Header("Teclas")]
     public KeyCode teclaCerrar = KeyCode.Escape;
