@@ -1000,7 +1000,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Lobby
   campoCodigo: {fileID: 545410575}
   textoEstado: {fileID: 1232987460}
-  escenaJuego: Prueba_Cooperativo
+  escenaJuego: Mapa_Prototipo
   puerto: 7777
 --- !u!4 &624710798
 Transform:
