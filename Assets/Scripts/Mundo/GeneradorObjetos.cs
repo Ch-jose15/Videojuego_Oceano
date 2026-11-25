@@ -1,4 +1,5 @@
-// Genera copias de prefabs en posiciones aleatorias del Terrain, sobre el suelo y bajo el agua, con preferencias opcionales de profundidad, distancia a la base y modelos a evitar.
+// Genera copias de prefabs en posiciones aleatorias del Terrain, sobre el suelo y bajo el agua, con preferencias opcionales de profundidad, distancia a la base y modelos a evitar. En red solo genera el host y los crea para todos.
+using Unity.Netcode;
 using UnityEngine;
 
 public class GeneradorObjetos : MonoBehaviour
@@ -27,7 +28,7 @@ public class GeneradorObjetos : MonoBehaviour
     [Range(0f, 1f)] public float preferenciaLejosDeBase = 0f;
 
     [Header("Colocación (opcional)")]
-    public bool apoyarEnSuelo = false;
+    public bool apoyarEnSuelo = true;
     public GameObject[] objetosAEvitar;
 
     private const int IntentosMaximos = 100;
@@ -36,11 +37,18 @@ public class GeneradorObjetos : MonoBehaviour
     private float alturaSueloMaxima;
     private Bounds[] zonasAEvitar = new Bounds[0];
 
-    // Usa el Terrain activo si no hay uno asignado y genera los objetos
+    // Usa el Terrain activo si no hay uno asignado y genera los objetos (en red, solo el host)
     void Start()
     {
         if (terreno == null) terreno = Terrain.activeTerrain;
+        if (EnRed() && !NetworkManager.Singleton.IsServer) return;
         Generar();
+    }
+
+    // Indica si hay una partida en red en marcha
+    private bool EnRed()
+    {
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
     }
 
     // Crea los objetos en posiciones válidas como hijos de este generador
@@ -64,8 +72,19 @@ public class GeneradorObjetos : MonoBehaviour
             GameObject prefab = prefabs[Random.Range(0, prefabs.Length)];
             Quaternion rotacion = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
-            GameObject nuevo = Instantiate(prefab, posicion, rotacion, transform);
-            nuevo.name = prefab.name + "_" + (i + 1);
+            NetworkObject objetoRed = prefab.GetComponent<NetworkObject>();
+            GameObject nuevo;
+            if (EnRed() && objetoRed != null)
+            {
+                nuevo = Instantiate(prefab, posicion, rotacion);
+                nuevo.name = prefab.name + "_" + (i + 1);
+                nuevo.GetComponent<NetworkObject>().Spawn(true);
+            }
+            else
+            {
+                nuevo = Instantiate(prefab, posicion, rotacion, transform);
+                nuevo.name = prefab.name + "_" + (i + 1);
+            }
             generados++;
         }
 

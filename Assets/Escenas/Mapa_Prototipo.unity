@@ -4775,6 +4775,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1481375693
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -630.56213
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -105.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -564.67676
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+      propertyPath: m_Name
+      value: Tortuga
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects:
+    - {fileID: 6727007405964328823, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 12fb09344be89c848a85ff62ffcba8a2, type: 3}
 --- !u!1 &1482793746
 GameObject:
   m_ObjectHideFlags: 0
@@ -6440,7 +6510,7 @@ MonoBehaviour:
   tessellationFactorFadeRange: 1850
   refractionColor: {r: 0.8271866, g: 1, b: 1, a: 1}
   maxRefractionDistance: 0.5
-  absorptionDistance: 14.7
+  absorptionDistance: 30
   scatteringColor: {r: 0, g: 0.50074744, b: 0.50074744, a: 1}
   ambientScattering: 0.2
   heightScattering: 0.2
@@ -7873,3 +7943,4 @@ SceneRoots:
   - {fileID: 259372227}
   - {fileID: 328355518}
   - {fileID: 1831027962}
+  - {fileID: 1481375693}
